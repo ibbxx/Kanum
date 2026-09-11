@@ -1,0 +1,30 @@
+# Credentials & Secrets
+.env
+client_secret_*.json
+*.secret.json
+
+# Dependencies
+node_modules/
+
+# Test files & temp files (pola umum)
+test-*.js
+temp*.js
+*.test.js
+*.spec.js
+
+# Build output Tailwind
+dist/
+
+# Node.js
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+Thumbs:db
+*.DS_Store
+
+# IDE
+.vscode/settings.json
+.idea/
+.vercel

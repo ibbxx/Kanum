@@ -1,0 +1,13 @@
+{
+  "name": "kanum",
+  "version": "1.0.0",
+  "description": "KANUM – Kajang Numerasi: Platform Etnomatematika Ammatoa Kajang",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i ./input.css -o ./dist/tailwind.min.css --minify",
+    "watch:css": "tailwindcss -c tailwind.config.js -i ./input.css -o ./dist/tailwind.min.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

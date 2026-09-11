@@ -1,0 +1,109 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  // Konten yang akan di-scan untuk class Tailwind
+  content: [
+    './Dashboard Siswa/**/*.html',
+    './Admin/**/*.html',
+    './Login/**/*.html',
+    './Landing/**/*.html',
+  ],
+
+  darkMode: 'class',
+
+  theme: {
+    extend: {
+      colors: {
+        // ============================================================
+        // KANUM Design System — Color Tokens
+        // Sumber: Docs/DESIGN.md
+        // ============================================================
+        'primary':                  '#003527',
+        'on-primary':               '#ffffff',
+        'primary-container':        '#064e3b',
+        'on-primary-container':     '#80bea6',
+        'primary-fixed':            '#b0f0d6',
+        'primary-fixed-dim':        '#95d3ba',
+        'on-primary-fixed':         '#002117',
+        'on-primary-fixed-variant': '#0b513d',
+
+        'secondary':                  '#9a4614',
+        'on-secondary':               '#ffffff',
+        'secondary-container':        '#fd925b',
+        'on-secondary-container':     '#712c00',
+        'secondary-fixed':            '#ffdbcb',
+        'secondary-fixed-dim':        '#ffb693',
+        'on-secondary-fixed':         '#341000',
+        'on-secondary-fixed-variant': '#7a3000',
+
+        'tertiary':                  '#3c2b00',
+        'on-tertiary':               '#ffffff',
+        'tertiary-container':        '#584000',
+        'on-tertiary-container':     '#e0a800',
+        'tertiary-fixed':            '#ffdf9f',
+        'tertiary-fixed-dim':        '#f9bd22',
+        'on-tertiary-fixed':         '#261a00',
+        'on-tertiary-fixed-variant': '#5c4300',
+
+        'background':    '#f8f9ff',
+        'on-background': '#121c28',
+        'surface':       '#f8f9ff',
+        'on-surface':    '#121c28',
+
+        'surface-variant':           '#d9e3f4',
+        'on-surface-variant':        '#404944',
+        'surface-container-lowest':  '#ffffff',
+        'surface-container-low':     '#eef4ff',
+        'surface-container':         '#e5eeff',
+        'surface-container-high':    '#dfe9fa',
+        'surface-container-highest': '#d9e3f4',
+        'surface-dim':               '#d1dbec',
+        'surface-bright':            '#f8f9ff',
+        'surface-tint':              '#2b6954',
+
+        'outline':         '#707974',
+        'outline-variant': '#bfc9c3',
+
+        'inverse-surface':    '#27313e',
+        'inverse-on-surface': '#eaf1ff',
+        'inverse-primary':    '#95d3ba',
+
+        'error':              '#ba1a1a',
+        'on-error':           '#ffffff',
+        'error-container':    '#ffdad6',
+        'on-error-container': '#93000a',
+      },
+
+      borderRadius: {
+        DEFAULT: '0.25rem',
+        lg: '0.5rem',
+        xl: '0.75rem',
+        full: '9999px',
+      },
+
+      spacing: {
+        'gutter':          '1.5rem',
+        'stack-sm':        '0.5rem',
+        'stack-md':        '1rem',
+        'stack-lg':        '2rem',
+        'margin-mobile':   '1rem',
+        'margin-desktop':  '2.5rem',
+        'container-max':   '1280px',
+      },
+
+      fontFamily: {
+        display:        ['"Plus Jakarta Sans"', 'sans-serif'],
+        body:           ['Inter', 'sans-serif'],
+        'display-lg':   ['"Plus Jakarta Sans"', 'sans-serif'],
+        'headline-md':  ['"Plus Jakarta Sans"', 'sans-serif'],
+        'headline-sm':  ['"Plus Jakarta Sans"', 'sans-serif'],
+        'body-lg':      ['Inter', 'sans-serif'],
+        'body-md':      ['Inter', 'sans-serif'],
+        'body-sm':      ['Inter', 'sans-serif'],
+        'label-md':     ['Inter', 'sans-serif'],
+        'number-data':  ['Inter', 'sans-serif'],
+      },
+    },
+  },
+
+  plugins: [],
+};
