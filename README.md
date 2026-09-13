@@ -21,7 +21,7 @@ Isi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` dari Supabase
    - Site URL: `http://localhost:3000` (dev) atau URL Vercel
    - Redirect URLs: `http://localhost:3000/auth/callback`, `/auth/confirm`, `/auth/reset`, `/daftar`
 
-Role: **siswa** → `/dashboard`. **Guru** → `/guru` (pengelolaan kelas & konten miliknya). **Admin** → `/admin` (semua + kelola akun). Panduan lengkap setup email & Resend: [`Supabase/docs/PANDUAN_LENGKAP.md`](Supabase/docs/PANDUAN_LENGKAP.md).
+Role: **siswa** → `/dashboard`. **Guru** → `/guru` (pengelolaan kelas & konten miliknya). **Admin** → `/admin` (semua + kelola akun). Tutorial lengkap setup (migrasi, URL, email, Resend): [`Supabase/docs/TUTORIAL.md`](Supabase/docs/TUTORIAL.md).
 
 5. Install & jalankan:
 

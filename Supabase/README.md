@@ -14,4 +14,6 @@ Cara menjalankan:
 3. Salin **seluruh isi** file nomor 1 → **Run** → pastikan sukses.
 4. Ulangi untuk file nomor 2.
 
-Dokumentasi terkait ada di [`docs/`](./docs/).
+Setelah migrasi, lanjutkan setup aplikasi mengikuti **satu-satunya** panduan:
+[`docs/TUTORIAL.md`](./docs/TUTORIAL.md) — mencakup URL Configuration, template
+email, SMTP Resend, Google OAuth, pengujian end-to-end, dan troubleshooting.
