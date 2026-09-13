@@ -64,17 +64,30 @@ function RegisterFormInner() {
     });
     if (error) {
       setLoading(false);
+      const msg = error.message.toLowerCase();
       const isRateLimited =
         error.code === "over_email_send_rate_limit" ||
-        error.message.toLowerCase().includes("rate limit");
+        msg.includes("rate limit");
       if (isRateLimited) {
-        // Akun tetap terbentuk — hanya email verifikasinya yang tertunda.
+        // 429: akun tetap terbentuk — hanya email verifikasinya yang tertunda.
         // Arahkan ke /cek-email supaya user bisa kirim ulang lewat tombol resend.
         showToast(
           "Akun dibuat, tapi email verifikasi tertunda. Kirim ulang di halaman berikutnya.",
           "error"
         );
         window.location.assign(`/cek-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
+      if (
+        error.code === "unexpected_failure" ||
+        msg.includes("error sending confirmation email")
+      ) {
+        // 500 dari Supabase: pengiriman email verifikasi gagal di sisi SMTP.
+        // Akun BELUM terbentuk — jangan arahkan ke /cek-email (resend tak akan temukan akun).
+        showToast(
+          "Server email sedang bermasalah. Pendaftaran gagal — coba lagi beberapa saat.",
+          "error"
+        );
         return;
       }
       showToast("Gagal daftar: " + error.message, "error");
