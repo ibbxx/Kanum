@@ -1,94 +1,60 @@
 # TUTORIAL LENGKAP — Supabase & Resend (KANUM)
 
-Ini **satu-satunya** panduan yang Anda butuhkan. Mencakup semuanya: migrasi
-database, URL config, template email, SMTP Resend, sampai pengujian akhir.
-Ikuti urut dari atas ke bawah. Total ±30 menit.
-
-**Prasyarat:**
-- Project Supabase `vantlmdcqziaccglfayb` aktif
-- Aplikasi jalan di `http://localhost:3000` (`npm run dev`)
-- File `.env` berisi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
-**Peta langkah:**
-
-| Tahap | Isi | Waktu |
-|-------|-----|-------|
-| 1 | Jalankan migrasi database (2 file SQL) | 5 mnt |
-| 2 | URL Configuration | 2 mnt |
-| 3 | Template email verifikasi & reset | 3 mnt |
-| 4 | Akun + API key Resend | 3 mnt |
-| 5 | (Opsional) Verifikasi domain | tunggu DNS |
-| 6 | SMTP Settings di Supabase ⭐ | 3 mnt |
-| 7 | Rate limit email | 1 mnt |
-| 8 | Uji end-to-end 4 alur | 8 mnt |
-| 9 | Kalau macet: troubleshooting | — |
+> **Status Anda:** ✅ Migrasi database selesai · 🌐 Produksi: **https://kanum-nine.vercel.app**
+>
+> Berarti **Tahap 1 sudah dilewati**. Mulai langsung dari **TAHAP 2**.
+> Total sisa pekerjaan: **±15 menit**.
 
 ---
 
-# TAHAP 1 — Migrasi Database (WAJIB, jalankan sekali)
+# TAHAP 2 — URL Configuration (WAJIB — pakai domain Vercel Anda)
 
-Database KANUM butuh 2 migrasi berurutan. Keduanya idempotent — kalau
-dijalankan dua kali tidak akan merusak apa pun.
+Tanpa ini, semua link email ditolak Supabase.
 
-1. Buka **https://supabase.com/dashboard** → login.
-2. Klik project **KANUM** (`vantlmdcqziaccglfayb`).
-3. Sidebar kiri → ikon terminal **SQL Editor**.
-4. Klik **New query** (kanan atas).
-5. Buka file `Supabase/000_rebuild.sql` di VS Code → **Ctrl+A → Ctrl+C**
-   (salin SEMUA isinya).
-6. Tempel di kotak query Supabase → klik **Run** (atau Ctrl+Enter).
-7. Tunggu. Bawah kotak muncul `Success. No rows returned` — itu **berhasil**.
-8. Klik **New query** lagi → ulangi langkah 5–7 dengan
-   `Supabase/001_multi_role.sql`.
-
-**✅ Verifikasi cepat:** sidebar kiri → ikon tabel **Table Editor** → pastikan
-ada tabel: `profiles, exercises, questions, question_options,
-exercise_attempts, student_answers, student_progress, materi, budaya,
-classes, class_members`.
-Di Table Editor → klik tabel `profiles` → kolom **role** boleh berisi
-`admin`, `teacher`, atau `student`.
-
-> ❗ Error `relation "public.class_members" does not exist` berarti Anda
-> menjalankan versi lama file. Ambil versi terbaru dari repo dan jalankan ulang.
-
----
-
-# TAHAP 2 — URL Configuration (WAJIB)
-
-Tanpa langkah ini, SEMUA link dari email akan ditolak Supabase.
-
-1. Sidebar kiri → ikon perisai **Authentication**.
-2. Baris tab atas → klik **URL Configuration**.
-3. **Site URL** → isi:
+1. Buka **https://supabase.com/dashboard** → project **KANUM** (`vantlmdcqziaccglfayb`).
+2. Sidebar kiri → ikon perisai **Authentication**.
+3. Tab atas → **URL Configuration**.
+4. **Site URL** → ganti menjadi:
    ```
-   http://localhost:3000
+   https://kanum-nine.vercel.app
    ```
-4. Bagian **Redirect URLs** → klik **Add URL** untuk TAMBAHKAN keempat URL ini
-   (satu per satu; tempel → Enter):
+   > Karena aplikasi Anda sudah live di Vercel, jadikan **domain produksi** sebagai
+   > Site URL (bukan localhost). Pengujian lokal tetap bisa — lihat catatan di bawah.
+5. **Redirect URLs** → **Add URL** satu per satu, tambahkan KEDUA set ini:
+
+   **Produksi (utama):**
+   ```
+   https://kanum-nine.vercel.app/auth/confirm
+   https://kanum-nine.vercel.app/auth/callback
+   https://kanum-nine.vercel.app/auth/reset
+   https://kanum-nine.vercel.app/daftar
+   ```
+
+   **Development (agar bisa uji di laptop juga):**
    ```
    http://localhost:3000/auth/confirm
    http://localhost:3000/auth/callback
    http://localhost:3000/auth/reset
    http://localhost:3000/daftar
    ```
-5. Hapus URL lain/lama (ikon tempat sampah) supaya daftar bersih.
-6. Klik **Save changes**.
+6. Hapus URL lama yang tidak dipakai (ikon tempat sampah).
+7. Klik **Save changes**.
 
-**✅ Tanda berhasil:** Site URL = `http://localhost:3000`, daftar Redirect
-URLs berisi tepat 4 URL di atas.
+**✅ Tanda berhasil:** 8 Redirect URLs (4 produksi + 4 dev) tersimpan tanpa error.
 
-> Saat deploy produksi nanti: tambahkan juga `https://domain-anda.com/auth/confirm`
-> dst., dan ubah Site URL.
+> **Dev vs Produksi:** link email di-generate ke **Site URL**. Dengan Site URL
+> produksi, email selalu membuka `kanum-nine.vercel.app` — aman, karena halaman
+> yang sama sudah ter-deploy di sana. Uji dari laptop tetap berfungsi: browser
+> Anda membuka domain produksi, bukan localhost.
 
 ---
 
 # TAHAP 3 — Template Email (disarankan)
 
-## 3.1 — Template "Confirm signup"
+## 3.1 — "Confirm signup"
 
-1. Masih di **Authentication** → tab **Emails**.
-2. Klik **Templates** → pilih **Confirm signup**.
-3. Hapus seluruh HTML bawaan di kotak kiri, ganti dengan:
+1. **Authentication** → tab **Emails** → **Templates** → klik **Confirm signup**.
+2. Hapus seluruh HTML bawaan, ganti:
 
 ```html
 <h2>Selamat datang di KANUM 👋</h2>
@@ -106,199 +72,169 @@ URLs berisi tepat 4 URL di atas.
 </p>
 ```
 
-4. Klik **Save**.
+3. **Save**. ⚠️ Jangan hapus `{{ .ConfirmationURL }}`.
 
-> ⚠️ `{{ .ConfirmationURL }}` JANGAN dihapus — di situlah link verifikasi.
+## 3.2 — "Reset Password"
 
-## 3.2 — Template "Reset Password"
-
-1. Masih di daftar Templates → klik **Reset Password**.
-2. Ganti isinya dengan kode yang sama persis seperti di atas, hanya ubah:
-   - Judul: `Atur Ulang Kata Sandi KANUM`
-   - Teks tombol: `Atur Ulang Kata Sandi`
-3. Klik **Save**.
-
-**✅ Tanda berhasil:** pratinjau di kanan menampilkan tombol hijau KANUM.
+1. Templates → klik **Reset Password**.
+2. Ganti isinya sama dengan kode di atas, hanya ubah:
+   - Judul → `Atur Ulang Kata Sandi KANUM`
+   - Teks tombol → `Atur Ulang Kata Sandi`
+3. **Save**.
 
 ---
 
 # TAHAP 4 — Akun & API Key Resend (±3 menit)
 
-1. Tab browser baru → **https://resend.com** → **Sign Up**.
-2. Pilih **Continue with Google** (tercepat) atau daftar via email.
-3. ⚠️ **PENTING:** gunakan email yang benar-benar Anda pantau. Selama domain
-   belum diverifikasi (Tahap 5), hanya email inilah yang bisa menerima email uji.
-4. Setelah masuk: sidebar kiri → **API Keys**.
-5. Klik **Create API Key**.
-6. Isi form:
-   - **Name:** `supabase-kanum`
-   - **Permission:** `Full access`
-7. Klik **Create**.
-8. **SEGERA salin** key yang tampil — formatnya `re_........................`.
-   - Klik ikon copy di samping key.
-   - Tempel sementara di Notepad.
-   - ⚠️ Key **hanya tampil satu kali** — kalau hilang, buat key baru saja.
-
-**✅ Tanda berhasil:** 1 key bernama `supabase-kanum` di daftar, dan Anda
-pegang nilainya di Notepad.
+1. Tab baru → **https://resend.com** → **Sign Up** → **Continue with Google**.
+2. ⚠️ Gunakan email yang benar-benar Anda pantau — sampai domain diverifikasi
+   (Tahap 5), hanya email inilah yang bisa menerima email uji.
+3. Sidebar → **API Keys** → **Create API Key**:
+   - Name: `supabase-kanum` · Permission: `Full access` → **Create**
+4. **SEGERA salin** key `re_............` (ikon copy) → simpan di Notepad.
+   ⚠️ Hanya tampil **satu kali**. Hilang? Buat key baru saja.
 
 ---
 
-# TAHAP 5 — (Opsional) Verifikasi Domain di Resend
+# TAHAP 5 — Verifikasi Domain (opsional untuk solo-test, WAJIB sebelum dipakai publik)
 
-> **Lewati dulu** kalau baru testing sendiri (Tahap 4 sudah cukup).
-> **WAJIB** sebelum aplikasi dipakai siswa/guru — tanpa ini Resend menolak
-> kirim ke email di luar milik Anda.
+> Tanpa domain: Resend hanya kirim ke **email akun Resend Anda**. Untuk
+> siswa/guru dengan email lain → wajib tahap ini.
 
-1. Di Resend: sidebar → **Domains** → **Add Domain**.
-2. Ketik domain Anda, mis. `kanum.sch.id` → **Add**.
-3. Resend menampilkan daftar record DNS (SPF, DKIM, DMARC). **Biarkan tab
-   ini terbuka.**
-4. Buka tab baru: dashboard DNS domain Anda:
-   - **Cloudflare:** pilih domain → DNS → Records → Add record
-   - **cPanel:** Domain → Zone Editor → Manage
-   - **Registrar lain:** cari menu DNS Management
-5. Tambahkan SEMUA record persis seperti ditampilkan Resend:
-   - Type `TXT`, Name sesuai tampilan (mis. `resend._domainkey`), Value = string panjang dari Resend
-   - Type `TXT`, Name `@` (root), Value = SPF `v=spf1 include:...`
-   - Type `TXT`, Name `_dmarc`, Value = DMARC (kalau diminta)
-6. Kembali ke tab Resend → klik **Verify**.
-7. Status berubah **Pending → Verified** (5 menit – beberapa jam; klik
-   refresh sesekali).
+1. Resend → **Domains** → **Add Domain**.
+2. Domain Vercel **tidak bisa** dipakai kirim email (subdomain `vercel.app`
+   milik Vercel — Anda tidak pegang DNS-nya). Gunakan **domain milik Anda
+   sendiri** (mis. `kanum.sch.id`). Belum punya? Beli domain murah
+   (Cloudflare/NIcxx/Rumahweb ±Rp100–200rb/tahun).
+3. Ketik domain → **Add** → Resend menampilkan record DNS (SPF, DKIM, DMARC).
+4. Buka DNS domain Anda (Cloudflare/cPanel/registrar) → tambahkan SEMUA record
+   persis seperti ditampilkan.
+5. Kembali ke Resend → **Verify** → tunggu status **Verified** (5 mnt – jam).
 
-**✅ Tanda berhasil:** badge hijau **Verified** di baris domain.
+**✅ Tanda berhasil:** badge hijau **Verified**.
 
 ---
 
 # TAHAP 6 — SMTP Settings di Supabase ⭐ (inti)
 
-1. Kembali ke tab **Supabase** → **Authentication** → tab **Emails** →
-   klik **SMTP Settings**.
-2. Toggle **Enable Custom SMTP** → **ON**. (Muncul dialog peringatan →
-   klik **Confirm** / **I understand**.)
-3. Isi form PERSIS seperti ini:
+1. **Authentication** → tab **Emails** → **SMTP Settings**.
+2. **Enable Custom SMTP** → ON → confirm dialog.
+3. Isi:
 
    | Field | Nilai |
    |---|---|
-   | **Sender email** | `onboarding@resend.dev` — tanpa domain. Setelah Tahap 5 Verified: ganti jadi `noreply@domain-anda.com` |
+   | **Sender email** | `onboarding@resend.dev` — sementara (testing). Setelah Tahap 5 Verified → `noreply@domain-anda.com` |
    | **Sender name** | `KANUM` |
    | **Host** | `smtp.resend.com` |
    | **Port number** | `465` |
    | **Username** | `resend` |
-   | **Password** | `re_...` — API key dari Tahap 4 |
+   | **Password** | `re_...` — API key Tahap 4 |
    | **Minimum interval between emails** | `60` |
 
-4. Gulir ke bawah → klik **Save changes**.
-5. **Tekan F5 (refresh)** → buka lagi SMTP Settings.
-6. ⚠️ Kotak **Password** terlihat KOSONG setelah refresh — itu **NORMAL**
-   (Supabase menyimpannya tersembunyi). Jangan isi ulang.
+4. **Save changes**.
+5. **F5 (refresh)** → buka lagi SMTP Settings.
+   ⚠️ Kotak Password kosong setelah refresh itu **NORMAL** — tersimpan tersembunyi.
 
-**✅ Tanda berhasil:** toggle ON bertahan setelah refresh, tanpa pesan galat.
+**✅ Tanda berhasil:** toggle ON bertahan setelah refresh.
 
-> 💡 Alternatif tanpa copy-paste: sidebar Supabase → **Integrations** →
-> **Resend** → Connect — API key dan SMTP terisi otomatis. Nama pengirim tetap
-> diisi manual seperti tabel di atas.
+> 💡 Alternatif 1-klik: sidebar → **Integrations** → **Resend** → Connect.
 
 ---
 
 # TAHAP 7 — Naikkan Rate Limit Email
 
-Batas jam Supabase berlaku TERPISAH dari SMTP — kalau tetap kecil, kirim
-ulang batch tetap diblok.
+**Authentication** → tab **Rate Limits** → **"Emails sent per hour"** → `100`
+(atau maksimum) → **Save**.
 
-1. **Authentication** → tab **Rate Limits**.
-2. Cari baris **"Emails sent per hour"**.
-3. Ubah nilainya → `100` (atau maksimum yang diizinkan).
-4. Klik **Save**.
-
-**✅ Tanda berhasil:** nilai baru tersimpan tanpa error.
+> Tetap perlu meski SMTP sudah custom — batas ini berdiri sendiri.
 
 ---
 
-# TAHAP 8 — Uji End-to-End (jangan dilewati)
+# TAHAP 8 — Uji End-to-End (ujilah di DOMAIN PRODUKSI Anda)
 
-Aplikasi harus jalan: `npm run dev` → http://localhost:3000
+Karena aplikasi sudah live, ujilah langsung di
+**https://kanum-nine.vercel.app** — hasilnya sama dengan lokal, tapi lebih
+nyata (bisa dibuka dari HP juga).
 
-**Aturan penerima email:**
-- Domain BELUM diverifikasi (Tahap 5 dilewati) → pakai **persis email akun
-  Resend Anda**.
-- Domain SUDAH Verified → email apa pun boleh.
+**Aturan penerima:**
+- Domain BELUM diverifikasi (Tahap 5 dilewati) → pakai **persis email akun Resend**.
+- Domain sudah Verified → email apa pun.
 
-## Uji 1 — Daftar + Verifikasi Email
-1. Buka `http://localhost:3000/daftar`.
-2. Isi: Nama lengkap, Email, Kata sandi (min 6 karakter), ulangi sandi.
-3. Pilih **Siswa** → centang setuju → **Daftar Sekarang**.
-4. Anda diarahkan ke halaman **"Cek Email Anda"** (`/cek-email?...`).
-5. Buka inbox → cari pengirim **KANUM** → tidak ada? Cek **Spam/Promosi**.
-6. Klik tombol **Aktifkan Akun**.
-7. **✅** Browser mendarat di `/dashboard`, sudah login.
+## Uji 1 — Daftar + Verifikasi
+1. Buka `https://kanum-nine.vercel.app/daftar`.
+2. Nama, email, sandi (min 6), ulangi → pilih **Siswa** → centang setuju →
+   **Daftar Sekarang**.
+3. Mendarat di halaman **"Cek Email Anda"**.
+4. Inbox → pengirim **KANUM** → (kosong? cek Spam/Promosi) → klik **Aktifkan Akun**.
+5. **✅** Mendarat di `/dashboard`, sudah login.
 
 ## Uji 2 — Kirim Ulang (bukti tanpa 429)
-1. Logout → `/login` → masuk dengan akun yang BELUM terverifikasi
-   (atau daftar akun lain).
-2. Di `/cek-email` klik **Kirim Ulang Email Verifikasi**.
-3. Tunggu cooldown 60 detik habis → klik lagi 1–2 kali.
-4. **✅** Semua terkirim, email masuk lagi, TIDAK ada pesan galat 429.
+1. Daftar akun lain (belum verifikasi) → masuk ke `/cek-email`.
+2. Klik **Kirim Ulang Email Verifikasi** → tunggu cooldown 60 detik → klik lagi.
+3. **✅** Terkirim semua, tanpa galat 429.
 
 ## Uji 3 — Lupa Kata Sandi
-1. `/login` → klik **Lupa kata sandi?**
-2. Isi email terdaftar → **Kirim Tautan Reset**.
-3. Halaman sukses tampil → cek inbox → klik **Atur Ulang Kata Sandi**.
-4. Isi sandi baru 2× → **Simpan Kata Sandi Baru**.
-5. **✅** Otomatis masuk ke dashboard sesuai peran.
+1. `/login` → **Lupa kata sandi?** → isi email → **Kirim Tautan Reset**.
+2. Inbox → klik **Atur Ulang Kata Sandi** → isi sandi baru 2× → **Simpan**.
+3. **✅** Otomatis masuk dashboard sesuai peran.
 
-## Uji 4 — Google (bonus, tidak pakai email)
-1. `/daftar` → pilih role (Siswa/Guru) → **Daftar dengan Google**.
-2. Pilih akun Google → setuju.
-3. **✅** Kembali ke aplikasi, masuk sesuai role: siswa → `/dashboard`,
-   guru → `/guru`.
+## Uji 4 — Google
+1. `/daftar` → pilih role → **Daftar dengan Google** → pilih akun.
+2. **✅** Masuk sesuai role: siswa → `/dashboard`, guru → `/guru`.
+
+> ⚠️ **Google OAuth + domain baru:** kalau Google login error setelah pindah ke
+> domain produksi, buka Google Cloud Console → Credentials → OAuth client Anda →
+> tambahkan ke **Authorized redirect URIs**:
+> `https://vantlmdcqziaccglfayb.supabase.co/auth/v1/callback` (yang ini biasanya
+> sudah ada) — dan di Supabase pastikan `/auth/callback` produksi ada di Redirect
+> URLs (Tahap 2 sudah mencakup).
 
 ---
 
 # TAHAP 9 — Troubleshooting
 
-| Gejala | Penyebab & Solusi |
+| Gejala | Solusi |
 |---|---|
-| `429 over_email_send_rate_limit` masih muncul | 1) SMTP Settings belum di-Save / toggle OFF → ulangi Tahap 6. 2) Rate limit per jam masih kecil → ulangi Tahap 7. 3) Kirim ulang < 60 detik → tunggu cooldown. |
-| Galat *"You can only send testing emails to your own email address (until you verify your domain)"* | Normal di mode tanpa domain → pakai email akun Resend Anda, atau selesaikan Tahap 5 lalu ganti Sender email di Tahap 6. |
-| Email tidak masuk sama sekali | 1) Cek folder Spam/Promosi. 2) Supabase sidebar → **Logs** → **Auth** → lihat error kirim terakhir. 3) Pastikan Sender email cocok dengan status domain. |
-| Link verifikasi: *"tidak valid atau sudah pernah dipakai"* | Link sekali pakai / sudah >24 jam → kirim ulang via `/cek-email`. |
-| Reset password gagal, verifikasi normal | Redirect URL `/auth/reset` belum ada → ulangi Tahap 2 langkah 4. |
-| Klik link malah ke `localhost:3000` padahal akses via HP | Normal di dev — `localhost` hanya di komputer yang sama. Uji di HP nanti setelah deploy. |
-| SMTP tidak bisa disimpan | Isi ulang Password dengan `re_...` utuh (tanpa spasi/enter), coba browser lain, pastikan API key masih valid di Resend. |
-| Email masuk Spam | Selesaikan Tahap 5 (SPF+DKIM+DMARC Verified), pakai domain sekolah, hindari kata promosi di subjek. |
-| Login Google error / kembali ke /login | OAuth Google di Supabase: Authentication → Providers → Google harus ON dengan Client ID/Secret; Redirect `/auth/callback` ada di URL Configuration. |
+| `429 over_email_send_rate_limit` | 1) SMTP belum Save/toggle OFF → Tahap 6. 2) Rate limit masih kecil → Tahap 7. 3) Kirim ulang <60 dtk → tunggu cooldown. |
+| *"You can only send testing emails to your own email address..."* | Mode tanpa domain → pakai email akun Resend Anda, atau selesaikan Tahap 5 lalu ganti Sender (Tahap 6). |
+| Email tak masuk | Cek Spam/Promosi → **Logs → Auth** di Supabase → lihat error kirim. |
+| Link verifikasi "tidak valid / sudah dipakai" | Sekali pakai / >24 jam → kirim ulang via `/cek-email`. |
+| Link membuka localhost dari HP | Site URL masih `http://localhost:3000` → ganti ke `https://kanum-nine.vercel.app` (Tahap 2 langkah 4). |
+| SMTP tak bisa disimpan | Isi ulang Password `re_...` utuh, coba browser lain, cek key valid di Resend. |
+| Email masuk Spam | Selesaikan Tahap 5 (SPF+DKIM+DMARC), pakai domain sendiri, hindari kata promosi. |
+| Login Google gagal di produksi | Cek kotak ⚠️ Google OAuth di Tahap 8. |
 
 ---
 
-# Lampiran — Cheat Sheet
+# Lampiran — Cheat Sheet (nilai siap-copy)
 
 ```
-── SQL (Tahap 1) ──────────────────────────────────────
-SQL Editor → Run: 000_rebuild.sql → lalu 001_multi_role.sql
+── Situs ──────────────────────────────────────────────
+Produksi : https://kanum-nine.vercel.app
+Dev      : http://localhost:3000
 
-── URL (Tahap 2) ──────────────────────────────────────
-Site URL       : http://localhost:3000
-Redirect URLs  : /auth/confirm  /auth/callback  /auth/reset  /daftar
+── URL Configuration ──────────────────────────────────
+Site URL      : https://kanum-nine.vercel.app
+Redirect URLs : https://kanum-nine.vercel.app/auth/confirm
+                https://kanum-nine.vercel.app/auth/callback
+                https://kanum-nine.vercel.app/auth/reset
+                https://kanum-nine.vercel.app/daftar
+                (+ 4 padanan http://localhost:3000/... untuk dev)
 
-── SMTP (Tahap 6) ─────────────────────────────────────
-Host     : smtp.resend.com     Port : 465
-Username : resend              Pass : re_API_KEY
-Sender   : onboarding@resend.dev            (testing)
-           noreply@domain-anda.com          (setelah domain Verified)
-Name     : KANUM               Interval : 60
+── SMTP ───────────────────────────────────────────────
+Host     : smtp.resend.com   Port : 465
+Username : resend            Pass : re_API_KEY
+Sender   : onboarding@resend.dev          (testing)
+           noreply@domain-anda.com        (setelah domain Verified)
+Name     : KANUM             Interval : 60
 
-── Rate (Tahap 7) ─────────────────────────────────────
+── Rate ───────────────────────────────────────────────
 Emails sent per hour : 100
+
+── OAuth Google ───────────────────────────────────────
+Authorized redirect URI :
+https://vantlmdcqziaccglfayb.supabase.co/auth/v1/callback
 ```
 
-**Peta peran:** `student` → `/dashboard` · `teacher` → `/guru` · `admin` →
-`/admin`. Ubah role lewat UI: **Admin → Kelola Akun**.
-
-**Setup Google OAuth** (Authentication → Providers → Google):
-1. Buka https://console.cloud.google.com → buat project → **APIs & Services →
-   Credentials → Create Credentials → OAuth client ID** (type Web application).
-2. Authorized redirect URI:
-   `https://vantlmdcqziaccglfayb.supabase.co/auth/v1/callback`
-3. Salin Client ID & Client Secret → tempel di Supabase Providers → Google →
-   Save.
+**Peran:** `student` → `/dashboard` · `teacher` → `/guru` · `admin` → `/admin`.
+Ubah role via UI: **Admin → Kelola Akun** (`https://kanum-nine.vercel.app/admin/akun`).
