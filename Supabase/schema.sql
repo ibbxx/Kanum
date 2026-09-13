@@ -21,7 +21,11 @@ $$;
 -- FUNGSI HELPER – cek admin
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN LANGUAGE sql SECURITY DEFINER AS $$
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid() AND role = 'admin'
@@ -232,24 +236,44 @@ CREATE TRIGGER trg_budaya_updated
 -- Mapping: metadata 'teacher' → role 'admin' di database
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
-  v_raw_role TEXT := COALESCE(NEW.raw_user_meta_data->>'role', 'student');
+  v_raw_role TEXT := lower(COALESCE(NEW.raw_user_meta_data->>'role', 'student'));
   v_db_role  TEXT;
 BEGIN
+  -- Guru/admin di UI disimpan sebagai role 'admin' (satu panel pengelola).
   v_db_role := CASE
-    WHEN v_raw_role = 'teacher' THEN 'admin'
+    WHEN v_raw_role IN ('teacher', 'guru', 'admin') THEN 'admin'
     ELSE 'student'
   END;
 
-  INSERT INTO public.profiles (id, full_name, email, role)
+  INSERT INTO public.profiles (id, full_name, email, role, avatar_url)
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    COALESCE(
+      NEW.raw_user_meta_data->>'full_name',
+      NEW.raw_user_meta_data->>'name',
+      split_part(COALESCE(NEW.email, ''), '@', 1),
+      ''
+    ),
     COALESCE(NEW.email, ''),
-    v_db_role
+    v_db_role,
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture')
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE SET
+    full_name = CASE
+      WHEN public.profiles.full_name = '' THEN EXCLUDED.full_name
+      ELSE public.profiles.full_name
+    END,
+    email = CASE
+      WHEN public.profiles.email = '' THEN EXCLUDED.email
+      ELSE public.profiles.email
+    END,
+    avatar_url = COALESCE(public.profiles.avatar_url, EXCLUDED.avatar_url);
 
   RETURN NEW;
 END;
@@ -259,6 +283,51 @@ DROP TRIGGER IF EXISTS trg_on_auth_user_created ON auth.users;
 CREATE TRIGGER trg_on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Fallback jika trigger belum sempat jalan (OAuth / user lama tanpa baris profiles)
+CREATE OR REPLACE FUNCTION public.ensure_own_profile()
+RETURNS public.profiles
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  uid uuid := auth.uid();
+  meta jsonb := COALESCE(auth.jwt() -> 'user_metadata', '{}'::jsonb);
+  v_raw text := lower(COALESCE(meta->>'role', 'student'));
+  v_role text;
+  v_row public.profiles;
+BEGIN
+  IF uid IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated' USING ERRCODE = '28000';
+  END IF;
+
+  SELECT * INTO v_row FROM public.profiles WHERE id = uid;
+  IF FOUND THEN
+    RETURN v_row;
+  END IF;
+
+  v_role := CASE
+    WHEN v_raw IN ('teacher', 'guru', 'admin') THEN 'admin'
+    ELSE 'student'
+  END;
+
+  INSERT INTO public.profiles (id, full_name, email, role, avatar_url)
+  VALUES (
+    uid,
+    COALESCE(meta->>'full_name', meta->>'name', split_part(COALESCE(auth.jwt()->>'email', ''), '@', 1), ''),
+    COALESCE(auth.jwt()->>'email', ''),
+    v_role,
+    COALESCE(meta->>'avatar_url', meta->>'picture')
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  SELECT * INTO v_row FROM public.profiles WHERE id = uid;
+  RETURN v_row;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.ensure_own_profile() TO authenticated;
 
 -- ============================================================
 -- TRIGGER – update student_progress setelah attempt selesai
@@ -609,9 +678,14 @@ $$;
 GRANT EXECUTE ON FUNCTION public.submit_student_quiz(UUID, JSONB) TO authenticated;
 
 -- ============================================================
--- Catatan setup admin:
--- Setelah membuat user via Supabase Dashboard → Auth → Users,
--- jalankan perintah berikut untuk meng-upgrade role ke admin:
+-- Catatan setup:
+-- 1. Jalankan SELURUH file ini di Supabase → SQL Editor (aman diulang).
+-- 2. Authentication → URL Configuration:
+--    Site URL: http://localhost:3000 (dev) / URL produksi
+--    Redirect URLs: http://localhost:3000/auth/callback dan {origin}/auth/callback
+-- 3. Guru = role 'admin' di tabel profiles (satu panel /admin).
+--    Siswa = role 'student' → /dashboard.
+-- 4. Naikkan akun lama ke guru/admin:
 --
 -- UPDATE public.profiles SET role = 'admin', full_name = 'Nama Guru'
 -- WHERE email = 'email-guru@domain.com';

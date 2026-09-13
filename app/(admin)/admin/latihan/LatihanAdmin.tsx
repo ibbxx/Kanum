@@ -20,7 +20,12 @@ const emptyForm = {
   is_published: false,
 };
 
-export function LatihanAdmin() {
+export function LatihanAdmin({
+  basePath = "/admin",
+}: {
+  /** Base rute soal — panel guru memakai /guru */
+  basePath?: string;
+}) {
   const { showToast } = useToast();
   const [rows, setRows] = useState<Row[]>([]);
   const [q, setQ] = useState("");
@@ -167,7 +172,7 @@ export function LatihanAdmin() {
                   <td>{e.is_published ? "Dipublikasikan" : "Draft"}</td>
                   <td>
                     <div className="flex gap-2 flex-wrap">
-                      <Link href={`/admin/soal?ex=${e.id}`} className="text-sm font-bold text-primary">
+                      <Link href={`${basePath}/soal?ex=${e.id}`} className="text-sm font-bold text-primary">
                         Soal
                       </Link>
                       <button

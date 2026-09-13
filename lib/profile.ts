@@ -12,7 +12,23 @@ export async function getProfile(): Promise<Profile | null> {
     .from("profiles")
     .select("id, full_name, email, class_name, role, avatar_url")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  return (data as Profile | null) ?? null;
+  if (data) return data as Profile;
+
+  const { data: ensured } = await supabase.rpc("ensure_own_profile");
+  if (ensured) return ensured as Profile;
+
+  return {
+    id: user.id,
+    full_name:
+      (user.user_metadata?.full_name as string | undefined) ||
+      (user.user_metadata?.name as string | undefined) ||
+      user.email ||
+      "",
+    email: user.email || "",
+    class_name: "",
+    role: "student",
+    avatar_url: (user.user_metadata?.avatar_url as string | undefined) || null,
+  };
 }

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/profile";
 import { StudentShell } from "@/components/layout/StudentShell";
 
@@ -9,5 +10,7 @@ export default async function StudentLayout({
   children: React.ReactNode;
 }) {
   const profile = await getProfile();
+  if (!profile) redirect("/login");
+  if (profile.role === "admin") redirect("/admin");
   return <StudentShell profile={profile}>{children}</StudentShell>;
 }

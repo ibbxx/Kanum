@@ -18,7 +18,12 @@ type QuestionRow = {
   question_options: OptionRow[];
 };
 
-export function SoalAdmin() {
+export function SoalAdmin({
+  basePath = "/admin/soal",
+}: {
+  /** Rute halaman soal ini sendiri — panel guru memakai /guru/soal */
+  basePath?: string;
+}) {
   const search = useSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
@@ -257,7 +262,7 @@ export function SoalAdmin() {
           value={exerciseId}
           onChange={(e) => {
             setExerciseId(e.target.value);
-            router.replace(e.target.value ? `/admin/soal?ex=${e.target.value}` : "/admin/soal");
+            router.replace(e.target.value ? `${basePath}?ex=${e.target.value}` : basePath);
           }}
         >
           <option value="">Pilih latihan...</option>

@@ -1,17 +1,21 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { homePathForRole, resolveUserRole } from "@/lib/auth";
 
 const publicExact = new Set([
   "/",
   "/login",
   "/daftar",
+  "/cek-email",
+  "/lupa-password",
+  "/reset-password",
   "/privacy",
   "/terms",
 ]);
 
 function isPublicPath(pathname: string) {
   if (publicExact.has(pathname)) return true;
-  if (pathname.startsWith("/auth/")) return true;
+  if (pathname.startsWith("/auth/")) return true; // termasuk /auth/oauth-role
   if (pathname.startsWith("/Asset/")) return true;
   return false;
 }
@@ -48,6 +52,7 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isTeacherPath = pathname === "/guru" || pathname.startsWith("/guru/");
   const isStudentPath =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/materi") ||
@@ -57,7 +62,10 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/pengaturan");
 
   if (!user) {
-    if (!isPublicPath(pathname) && (isAdminPath || isStudentPath)) {
+    if (
+      !isPublicPath(pathname) &&
+      (isAdminPath || isTeacherPath || isStudentPath)
+    ) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       const redirect = NextResponse.redirect(url);
@@ -69,17 +77,11 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  const role = profile?.role === "admin" ? "admin" : "student";
+  const role = await resolveUserRole(supabase, user.id);
 
   if (pathname === "/login" || pathname === "/daftar") {
     const url = request.nextUrl.clone();
-    url.pathname = role === "admin" ? "/admin" : "/dashboard";
+    url.pathname = homePathForRole(role);
     const redirect = NextResponse.redirect(url);
     supabaseResponse.cookies.getAll().forEach((c) => {
       redirect.cookies.set(c.name, c.value);
@@ -87,9 +89,10 @@ export async function updateSession(request: NextRequest) {
     return redirect;
   }
 
+  // /admin hanya admin sungguhan (guru masuk lewat /guru).
   if (isAdminPath && role !== "admin") {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = homePathForRole(role);
     const redirect = NextResponse.redirect(url);
     supabaseResponse.cookies.getAll().forEach((c) => {
       redirect.cookies.set(c.name, c.value);
@@ -97,9 +100,20 @@ export async function updateSession(request: NextRequest) {
     return redirect;
   }
 
-  if (isStudentPath && role === "admin") {
+  // /guru untuk teacher; admin juga boleh (kelola semua).
+  if (isTeacherPath && role !== "teacher" && role !== "admin") {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin";
+    url.pathname = homePathForRole(role);
+    const redirect = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((c) => {
+      redirect.cookies.set(c.name, c.value);
+    });
+    return redirect;
+  }
+
+  if (isStudentPath && role !== "student") {
+    const url = request.nextUrl.clone();
+    url.pathname = homePathForRole(role);
     const redirect = NextResponse.redirect(url);
     supabaseResponse.cookies.getAll().forEach((c) => {
       redirect.cookies.set(c.name, c.value);

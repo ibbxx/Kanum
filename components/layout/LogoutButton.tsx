@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/Icon";
 import { cn } from "@/lib/utils";
@@ -12,13 +11,10 @@ export function LogoutButton({
   className?: string;
   label?: string;
 }) {
-  const router = useRouter();
-
   async function logout() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.replace("/login");
-    router.refresh();
+    window.location.assign("/login");
   }
 
   return (

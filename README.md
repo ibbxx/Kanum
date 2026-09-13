@@ -13,7 +13,15 @@ cp .env.example .env
 
 Isi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` dari Supabase → Project Settings → API.
 
-3. Install & jalankan:
+3. Di Supabase → **SQL Editor**, jalankan seluruh `Supabase/schema.sql` (idempotent, aman diulang). Jika tabel sudah ada, cukup jalankan `Supabase/auth_fix.sql` untuk trigger profil + RPC `ensure_own_profile`.
+
+4. Authentication → URL Configuration:
+   - Site URL: `http://localhost:3000` (dev) atau URL Vercel
+   - Redirect URLs: `http://localhost:3000/auth/callback` dan `{origin produksi}/auth/callback`
+
+Role: **siswa** → `/dashboard`. **Guru** (daftar sebagai Guru) disimpan sebagai `admin` → `/admin`. Tidak ada panel admin terpisah dari guru.
+
+5. Install & jalankan:
 
 ```bash
 npm install

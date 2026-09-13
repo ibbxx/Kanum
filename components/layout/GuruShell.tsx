@@ -8,26 +8,26 @@ import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 
 const nav = [
-  { href: "/admin", icon: "dashboard", label: "Dashboard" },
-  { href: "/admin/latihan", icon: "edit_square", label: "Manajemen Latihan" },
-  { href: "/admin/soal", icon: "quiz", label: "Soal" },
-  { href: "/admin/progres", icon: "leaderboard", label: "Progres Siswa" },
-  { href: "/admin/materi", icon: "menu_book", label: "Materi" },
-  { href: "/admin/budaya", icon: "museum", label: "Budaya" },
-  { href: "/admin/akun", icon: "manage_accounts", label: "Kelola Akun" },
+  { href: "/guru", icon: "dashboard", label: "Dashboard Guru" },
+  { href: "/guru/kelas", icon: "groups", label: "Kelas Saya" },
+  { href: "/guru/latihan", icon: "edit_square", label: "Latihan" },
+  { href: "/guru/soal", icon: "quiz", label: "Soal" },
+  { href: "/guru/progres", icon: "leaderboard", label: "Progres Siswa" },
+  { href: "/guru/materi", icon: "menu_book", label: "Materi" },
+  { href: "/guru/budaya", icon: "museum", label: "Budaya" },
 ];
 
 const titles: Record<string, string> = {
-  "/admin": "Dashboard",
-  "/admin/latihan": "Manajemen Latihan",
-  "/admin/soal": "Soal",
-  "/admin/progres": "Progres Siswa",
-  "/admin/materi": "Materi",
-  "/admin/budaya": "Budaya",
-  "/admin/akun": "Kelola Akun",
+  "/guru": "Dashboard Guru",
+  "/guru/kelas": "Kelas Saya",
+  "/guru/latihan": "Latihan",
+  "/guru/soal": "Soal",
+  "/guru/progres": "Progres Siswa",
+  "/guru/materi": "Materi",
+  "/guru/budaya": "Budaya",
 };
 
-export function AdminShell({
+export function GuruShell({
   profile,
   children,
 }: {
@@ -35,10 +35,10 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const name = profile?.full_name || "Admin";
+  const name = profile?.full_name || "Guru";
   const title =
     titles[pathname] ||
-    (pathname.startsWith("/admin/soal") ? "Soal" : "Admin");
+    (pathname.startsWith("/guru/soal") ? "Soal" : "Panel Guru");
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -48,15 +48,15 @@ export function AdminShell({
             <span className="block font-display text-2xl font-extrabold text-primary">
               KANUM
             </span>
-            <span className="inline-block mt-1 text-[10px] font-bold tracking-wider uppercase bg-secondary-container text-white px-2 py-0.5 rounded-full">
-              Admin
+            <span className="inline-block mt-1 text-[10px] font-bold tracking-wider uppercase bg-tertiary-container text-on-tertiary-container px-2 py-0.5 rounded-full">
+              Guru
             </span>
           </div>
           <nav className="flex flex-1 flex-col gap-2">
             {nav.map((item) => {
               const active =
-                item.href === "/admin"
-                  ? pathname === "/admin"
+                item.href === "/guru"
+                  ? pathname === "/guru"
                   : pathname.startsWith(item.href);
               return (
                 <Link

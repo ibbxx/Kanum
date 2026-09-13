@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
+import { homePathForRole, resolveUserRole } from "@/lib/auth";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -23,6 +24,10 @@ export function RegisterForm() {
       showToast("Lengkapi semua kolom", "error");
       return;
     }
+    if (password.length < 6) {
+      showToast("Kata sandi minimal 6 karakter", "error");
+      return;
+    }
     if (password !== confirm) {
       showToast("Kata sandi tidak cocok", "error");
       return;
@@ -33,27 +38,57 @@ export function RegisterForm() {
     }
     setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/confirm`,
         data: {
           full_name: name,
-          role: role === "guru" ? "teacher" : "student",
+          role, // "siswa" | "guru" — trigger DB memetakan guru → 'teacher'
         },
       },
     });
-    setLoading(false);
     if (error) {
+      setLoading(false);
+      const isRateLimited =
+        error.code === "over_email_send_rate_limit" ||
+        error.message.toLowerCase().includes("rate limit");
+      if (isRateLimited) {
+        // Akun tetap terbentuk — hanya email verifikasinya yang tertunda.
+        // Arahkan ke /cek-email supaya user bisa kirim ulang lewat tombol resend.
+        showToast(
+          "Akun dibuat, tapi email verifikasi tertunda. Kirim ulang di halaman berikutnya.",
+          "error"
+        );
+        router.push(`/cek-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
       showToast("Gagal daftar: " + error.message, "error");
       return;
     }
-    showToast(
-      role === "guru"
-        ? "Akun guru berhasil dibuat! Cek email untuk verifikasi."
-        : "Akun berhasil dibuat! Silakan cek email untuk verifikasi."
-    );
-    setTimeout(() => router.push("/login"), 2000);
+    if (data.session && data.user) {
+      const dbRole = await resolveUserRole(supabase, data.user.id);
+      window.location.assign(homePathForRole(dbRole));
+      return;
+    }
+    setLoading(false);
+    router.push(`/cek-email?email=${encodeURIComponent(email)}`);
+  }
+
+  async function googleSignup() {
+    const supabase = createClient();
+    // Simpan pilihan role — diterapkan oleh /auth/oauth-role setelah OAuth kembali.
+    document.cookie = `kanum-oauth-role=${
+      role === "guru" ? "teacher" : "student"
+    }; path=/; max-age=1800; samesite=lax`;
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/auth/oauth-role`,
+      },
+    });
+    if (error) showToast("Gagal: " + error.message, "error");
   }
 
   return (
@@ -110,6 +145,10 @@ export function RegisterForm() {
               Guru
             </label>
           </div>
+          <p className="text-xs text-on-surface-variant">
+            Siswa masuk ke dashboard belajar. Guru mendapat panel pengelolaan kelas &amp;
+            konten sendiri di /guru.
+          </p>
           <label className="flex items-start gap-2 text-sm">
             <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} />
             <span>
@@ -132,6 +171,18 @@ export function RegisterForm() {
             {loading ? "Memproses..." : "Daftar Sekarang"}
           </button>
         </form>
+        <div className="relative my-5 flex items-center">
+          <div className="flex-grow h-px bg-outline-variant/40" />
+          <span className="px-3 text-outline text-[11px]">ATAU</span>
+          <div className="flex-grow h-px bg-outline-variant/40" />
+        </div>
+        <button
+          type="button"
+          onClick={googleSignup}
+          className="w-full border border-outline-variant py-3 rounded-xl font-semibold"
+        >
+          Daftar dengan Google
+        </button>
         <p className="text-center text-sm mt-6 text-on-surface-variant">
           Sudah punya akun?{" "}
           <Link href="/login" className="text-primary font-bold">
