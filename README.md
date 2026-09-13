@@ -13,13 +13,15 @@ cp .env.example .env
 
 Isi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` dari Supabase → Project Settings → API.
 
-3. Di Supabase → **SQL Editor**, jalankan seluruh `Supabase/schema.sql` (idempotent, aman diulang). Jika tabel sudah ada, cukup jalankan `Supabase/auth_fix.sql` untuk trigger profil + RPC `ensure_own_profile`.
+3. Di Supabase → **SQL Editor**, jalankan berurutan (idempotent, aman diulang):
+   1. `Supabase/000_rebuild.sql` — schema dasar (tabel, trigger, RLS, RPC)
+   2. `Supabase/001_multi_role.sql` — sistem tiga peran + kelas
 
 4. Authentication → URL Configuration:
    - Site URL: `http://localhost:3000` (dev) atau URL Vercel
-   - Redirect URLs: `http://localhost:3000/auth/callback` dan `{origin produksi}/auth/callback`
+   - Redirect URLs: `http://localhost:3000/auth/callback`, `/auth/confirm`, `/auth/reset`, `/daftar`
 
-Role: **siswa** → `/dashboard`. **Guru** (daftar sebagai Guru) disimpan sebagai `admin` → `/admin`. Tidak ada panel admin terpisah dari guru.
+Role: **siswa** → `/dashboard`. **Guru** → `/guru` (pengelolaan kelas & konten miliknya). **Admin** → `/admin` (semua + kelola akun). Panduan lengkap setup email & Resend: [`Supabase/docs/PANDUAN_LENGKAP.md`](Supabase/docs/PANDUAN_LENGKAP.md).
 
 5. Install & jalankan:
 
@@ -44,7 +46,7 @@ Buka [http://localhost:3000](http://localhost:3000).
 | `/laporan` `/pengaturan` | Siswa |
 | `/admin` … | Panel guru/admin |
 
-Quiz memakai RPC Supabase `get_student_quiz` dan `submit_student_quiz` (lihat `Supabase/schema.sql`).
+Quiz memakai RPC Supabase `get_student_quiz` dan `submit_student_quiz` (lihat `Supabase/000_rebuild.sql`).
 
 ## Deploy Vercel
 

@@ -162,7 +162,7 @@ cookie.
 
 ## 5. Sistem 3 Role (Siswa / Guru / Admin)
 
-Mulai migrasi `Supabase/multi_role.sql` (jalankan SETELAH `schema.sql`),
+Mulai migrasi `Supabase/001_multi_role.sql` (jalankan SETELAH `000_rebuild.sql`),
 role di database: **`student`** → `/dashboard`, **`teacher`** → `/guru`,
 **`admin`** → `/admin`.
 
