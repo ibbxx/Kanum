@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html class="light" lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Masuk - KANUM</title>
+<link rel="stylesheet" href="/dist/tailwind.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+    html, body { height: 100%; }
+    body { overscroll-behavior: none; }
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .cultural-pattern {
+        background-color: #003527;
+        background-image:
+            radial-gradient(circle at 15% 20%, rgba(176,240,214,0.10), transparent 45%),
+            radial-gradient(circle at 85% 85%, rgba(253,146,91,0.10), transparent 45%),
+            url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30 30 0zm0 10L10 30l20 20 20-20L30 10zm0 10l10 10-10 10-10-10 10-10z' fill='%23b0f0d6' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+    }
+    .panel-curve {
+        clip-path: path('M0,0 H100% V100% H0 C 6% 82%, 6% 18%, 0,0 Z');
+    }
+    .input-transition { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    a:focus-visible, button:focus-visible, input:focus-visible {
+        outline: 2px solid #003527;
+        outline-offset: 2px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; animation: none !important; }
+    }
+    .weave-float { animation: weaveFloat 7s ease-in-out infinite; }
+    .weave-float-delay { animation: weaveFloat 7s ease-in-out infinite; animation-delay: -3.2s; }
+    @keyframes weaveFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    .kanum-heading { letter-spacing: -0.02em; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+<script>window.PAGE_ROLE = 'public';</script>
+<script src="/supabase.js"></script>
+<script src="/guard.js"></script>
+</head>
+<body class="font-body-md text-on-background bg-surface-container-lowest h-screen w-screen overflow-hidden flex">
+
+<!-- LEFT: cultural / illustration panel -->
+<aside class="hidden lg:flex relative w-[46%] cultural-pattern panel-curve flex-col justify-between px-14 py-12 text-primary-fixed">
+
+    <a href="/"
+       class="inline-flex items-center gap-1.5 text-primary-fixed/70 hover:text-primary-fixed font-label-md text-[12px] tracking-wide transition-colors w-fit">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        Beranda
+    </a>
+
+    <!-- Decorative blurred atmosphere -->
+    <div class="absolute top-[-10%] right-[-10%] w-72 h-72 bg-primary-fixed/10 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="absolute bottom-[10%] left-[-15%] w-80 h-80 bg-secondary-container/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <!-- Woven-motif illustration -->
+    <div class="relative flex items-center justify-center flex-1">
+        <svg class="w-full max-w-[340px]" viewBox="0 0 340 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- outer diamond lattice, evoking Pattannungan weaving -->
+            <g class="weave-float" opacity="0.9">
+                <path d="M170 20 L260 110 L170 200 L80 110 Z" stroke="#b0f0d6" stroke-width="1.5" opacity="0.55"/>
+                <path d="M170 60 L230 120 L170 180 L110 120 Z" stroke="#fd925b" stroke-width="1.5" opacity="0.7"/>
+                <path d="M170 90 L205 125 L170 160 L135 125 Z" fill="#f9bd22" opacity="0.85"/>
+            </g>
+            <g class="weave-float-delay" opacity="0.85">
+                <path d="M170 150 L260 240 L170 330 L80 240 Z" stroke="#b0f0d6" stroke-width="1.5" opacity="0.5"/>
+                <path d="M170 190 L230 250 L170 310 L110 250 Z" stroke="#fd925b" stroke-width="1.5" opacity="0.65"/>
+                <path d="M170 220 L205 255 L170 290 L135 255 Z" fill="#b0f0d6" opacity="0.9"/>
+            </g>
+            <!-- connecting thread lines -->
+            <line x1="30" y1="170" x2="310" y2="170" stroke="#b0f0d6" stroke-width="1" stroke-dasharray="2 6" opacity="0.35"/>
+            <line x1="170" y1="10" x2="170" y2="330" stroke="#b0f0d6" stroke-width="1" stroke-dasharray="2 6" opacity="0.35"/>
+        </svg>
+    </div>
+
+    <!-- Wordmark + tagline -->
+    <div>
+        <div class="inline-flex items-center justify-center w-10 h-10 bg-primary-fixed/15 border border-primary-fixed/25 rounded-xl mb-4">
+            <span class="material-symbols-outlined text-primary-fixed text-[22px]" style="font-variation-settings: 'FILL' 1;">architecture</span>
+        </div>
+        <h1 class="font-display-lg kanum-heading text-[26px] font-extrabold text-primary-fixed leading-tight">KANUM</h1>
+        <p class="text-primary-fixed/70 text-[13px] mt-1.5 max-w-[300px] leading-relaxed">
+            Matematika dalam akar budaya — belajar pola, simetri, dan hitungan dari kearifan tenun Nusantara.
+        </p>
+    </div>
+</aside>
+
+<!-- RIGHT: form panel -->
+<main class="relative flex-1 flex items-center justify-center bg-surface-container-lowest px-6 sm:px-10">
+
+    <a href="/"
+       class="lg:hidden absolute top-5 left-5 z-20 inline-flex items-center gap-1.5 text-on-surface-variant hover:text-on-surface font-label-md text-[12px] tracking-wide transition-colors">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        Beranda
+    </a>
+
+    <div class="w-full max-w-[380px]">
+
+        <!-- Mobile-only logo -->
+        <div class="lg:hidden text-center mb-6">
+            <div class="inline-flex items-center justify-center w-11 h-11 bg-primary rounded-xl shadow-sm mb-2">
+                <span class="material-symbols-outlined text-primary-fixed text-[24px]" style="font-variation-settings: 'FILL' 1;">architecture</span>
+            </div>
+            <h1 class="font-display-lg text-[18px] font-extrabold text-on-surface tracking-tight">KANUM</h1>
+            <p class="text-on-surface-variant text-[11px] mt-0.5">Matematika dalam Akar Budaya</p>
+        </div>
+
+        <div class="mb-8">
+            <h2 class="font-display-lg kanum-heading text-[32px] font-extrabold text-on-surface leading-none">Masuk</h2>
+            <p class="text-on-surface-variant text-[13px] mt-2">Selamat datang kembali ke akun KANUM Anda.</p>
+        </div>
+
+        <form action="#" class="space-y-5" method="POST" onsubmit="return false;">
+            <!-- Email Field -->
+            <div>
+                <label class="block font-label-md text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.08em] mb-1.5" for="email">Email</label>
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px] group-focus-within:text-primary input-transition">mail</span>
+                    <input class="w-full pl-11 pr-3 py-3 text-[14px] bg-surface-container-low border border-outline-variant/50 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none input-transition placeholder:text-outline/40" id="email" name="email" placeholder="nama@email.com" type="email" required/>
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div>
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="block font-label-md text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.08em]" for="password">Kata Sandi</label>
+                    <a class="text-secondary text-[12px] font-medium hover:underline -mr-1 px-1 py-1 rounded" href="/daftar">Lupa sandi?</a>
+                </div>
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px] group-focus-within:text-primary input-transition">lock</span>
+                    <input class="w-full pl-11 pr-11 py-3 text-[14px] bg-surface-container-low border border-outline-variant/50 rounded-xl focus:ring-2 focus:ring-primary/15 focus:border-primary outline-none input-transition placeholder:text-outline/40" id="password" name="password" placeholder="••••••••" type="password" required/>
+                    <button class="absolute right-3.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" type="button" aria-label="Tampilkan kata sandi">
+                        <span class="material-symbols-outlined text-[19px]" id="toggle-password-icon">visibility</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Primary Action -->
+            <button
+                type="button"
+                class="w-full bg-primary text-on-primary font-display-lg text-[14px] font-bold tracking-wide py-3.5 rounded-xl hover:bg-on-primary-fixed-variant shadow-md hover:shadow-primary/25 transition-all duration-200 active:scale-[0.98]"
+                onclick="doLogin()">
+                Masuk
+            </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="relative my-6 flex items-center">
+            <div class="flex-grow h-px bg-outline-variant/40"></div>
+            <span class="px-3 text-outline text-[11px] font-semibold tracking-[0.1em]">ATAU</span>
+            <div class="flex-grow h-px bg-outline-variant/40"></div>
+        </div>
+
+        <!-- Social Login -->
+        <button class="w-full flex items-center justify-center gap-2 py-3 border border-outline-variant/50 rounded-xl hover:bg-surface-container-low transition-all duration-200 text-[13px] text-on-surface font-medium" type="button" onclick="doGoogleLogin()">
+            <svg height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+            </svg>
+            Masuk dengan Google
+        </button>
+
+        <!-- Tombol Daftar -->
+        <a href="/daftar" class="mt-3 w-full flex items-center justify-center gap-1.5 py-3 rounded-xl bg-primary-container/10 hover:bg-primary-container/20 transition-all duration-200 text-[13px] text-primary font-semibold">
+            <span class="material-symbols-outlined text-[16px]">person_add</span>
+            Belum punya akun? Daftar
+        </a>
+
+        <!-- Language & Help -->
+        <div class="mt-8 flex justify-between items-center px-0.5">
+            <button class="flex items-center gap-1 text-on-surface-variant text-[11px] hover:text-on-surface transition-colors" type="button" onclick="window.location.href='/';">
+                <span class="material-symbols-outlined text-[14px]">language</span>
+                Indonesia
+            </button>
+            <div class="flex gap-3">
+                <a class="text-on-surface-variant text-[11px] hover:text-on-surface transition-colors" href="/#fitur">Bantuan</a>
+                <a class="text-on-surface-variant text-[11px] hover:text-on-surface transition-colors" href="/daftar">Privasi</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="./masuk.js"></script>
+    <!-- React Grab Development Tool -->
+    <script src="/node_modules/react-grab/dist/index.global.js" onerror="this.onerror=null;this.src='https://unpkg.com/react-grab/dist/index.global.js'"></script>
+    <script>
+      window.addEventListener('react-grab:init', () => {
+        console.log('%c[React Grab] Aktif! Arahkan kursor ke elemen UI lalu tekan Cmd+C (sekali, JANGAN ditahan) atau klik toolbar di bawah.', 'color: #047857; font-weight: bold; font-size: 13px; background: #ecfdf5; padding: 4px 8px; border-radius: 4px;');
+      });
+    </script>
+</body>
+</html>

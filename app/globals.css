@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  vertical-align: middle;
+}
+
+.ammatoa-pattern {
+  mask-image: radial-gradient(circle at 2px 2px, black 1px, transparent 0);
+  mask-size: 16px 16px;
+  opacity: 0.04;
+}
+
+.cultural-divider {
+  height: 4px;
+  background: linear-gradient(90deg, #064e3b 0%, #fd925b 50%, #064e3b 100%);
+  mask-image: repeating-linear-gradient(45deg, #000 0, #000 5px, transparent 5px, transparent 10px);
+}
+
+.cultural-pattern {
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(176, 240, 214, 0.1), transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(253, 146, 91, 0.1), transparent 45%);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.prose-kanum h2,
+.prose-kanum h3,
+.prose-kanum h4 {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  color: #003527;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+}
+.prose-kanum p {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+.prose-kanum img {
+  border-radius: 0.75rem;
+  max-width: 100%;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.admin-table th {
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #404944;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #bfc9c3;
+}
+.admin-table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #e5eeff;
+  vertical-align: middle;
+}

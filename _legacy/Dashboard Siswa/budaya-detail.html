@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="/dist/tailwind.min.css"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detail Budaya | KANUM</title>
+  
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#003527',
+            secondary: '#9a4614',
+            tertiary: '#3c2b00',
+            background: '#f8f9ff',
+            surface: '#f8f9ff',
+            'surface-container': '#e5eeff',
+            'surface-container-low': '#eef4ff',
+            'on-surface': '#121c28',
+            'on-surface-variant': '#404944',
+            'outline-variant': '#bfc9c3',
+            'primary-container': '#064e3b',
+            'secondary-container': '#fd925b',
+            'tertiary-container': '#584000',
+            'on-primary': '#ffffff',
+            'on-secondary': '#ffffff',
+            'on-tertiary': '#ffffff',
+            'on-secondary-container': '#7a360f'
+          },
+          fontFamily: {
+            display: ['Plus Jakarta Sans'],
+            body: ['Inter']
+          }
+        }
+      }
+    };
+  </script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+    rel="stylesheet" />
+  <link href="dashboard.css" rel="stylesheet" />
+  <style>
+    /* ===== BASE ===== */
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      line-height: 1;
+      vertical-align: middle;
+    }
+
+    .icon-filled {
+      font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+
+    /* ===== AMMATOA PATTERN ===== */
+    .ammatoa-pattern {
+      background-image: radial-gradient(#003527 0.5px, transparent 0.5px);
+      background-size: 18px 18px;
+      opacity: 0.08;
+      pointer-events: none;
+    }
+
+    /* ===== HERO IMAGE ===== */
+    #hero-image {
+      object-fit: cover;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* ===== GALLERY ===== */
+    .gallery-card {
+      border-radius: 1.25rem;
+      border: 1px solid #bfc9c3;
+      background: #eef4ff;
+      overflow: hidden;
+      transition: box-shadow 0.18s ease, transform 0.18s ease;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .gallery-card:hover {
+      box-shadow: 0 6px 24px 0 rgba(0, 53, 39, 0.10);
+      transform: translateY(-2px);
+    }
+
+    .gallery-card img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      background: #e5eeff;
+      display: block;
+    }
+
+    .gallery-card-body {
+      padding: 0.875rem 1rem 1rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    .gallery-card-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: #003527;
+      line-height: 1.35;
+    }
+
+    .gallery-card-caption {
+      font-size: 0.75rem;
+      color: #9a4614;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .gallery-card-desc {
+      font-size: 0.8125rem;
+      color: #404944;
+      line-height: 1.6;
+      margin-top: 0.125rem;
+    }
+
+    .gallery-card-math {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.375rem;
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.625rem;
+      background: #e5f2ee;
+      border-radius: 0.625rem;
+      font-size: 0.75rem;
+      color: #003527;
+      line-height: 1.5;
+    }
+
+    .gallery-card-math .material-symbols-outlined {
+      font-size: 0.875rem;
+      flex-shrink: 0;
+      margin-top: 0.1em;
+    }
+
+    /* ===== RELATED MATERIAL ===== */
+    .related-card {
+      border-radius: 1.25rem;
+      border: 1px solid #bfc9c3;
+      background: #ffffff;
+      padding: 1rem 1.125rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: box-shadow 0.18s ease, transform 0.18s ease;
+    }
+
+    .related-card:hover {
+      box-shadow: 0 4px 18px 0 rgba(0, 53, 39, 0.09);
+      transform: translateY(-1px);
+    }
+
+    .related-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+
+    .related-card-icon {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.75rem;
+      background: #e5f2ee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .related-card-icon .material-symbols-outlined {
+      font-size: 1.125rem;
+      color: #003527;
+    }
+
+    .related-card-name {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.9375rem;
+      color: #003527;
+    }
+
+    .related-card-relation {
+      font-size: 0.8125rem;
+      color: #404944;
+      line-height: 1.6;
+    }
+
+    .related-card-concepts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      margin-top: 0.125rem;
+    }
+
+    .concept-chip {
+      background: #e5eeff;
+      color: #121c28;
+      border-radius: 999px;
+      padding: 0.1875rem 0.625rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+    }
+
+    .related-card-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      margin-top: 0.375rem;
+      padding: 0.5rem 1rem;
+      background: #003527;
+      color: #ffffff;
+      border-radius: 0.75rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-decoration: none;
+      width: fit-content;
+      transition: background 0.15s ease, opacity 0.15s ease;
+    }
+
+    .related-card-btn:hover {
+      background: #064e3b;
+    }
+
+    .related-card-btn .material-symbols-outlined {
+      font-size: 1rem;
+    }
+
+    /* ===== FUN FACTS ===== */
+    .fact-card {
+      border-radius: 1.25rem;
+      border: 1px solid #bfc9c3;
+      background: #ffffff;
+      padding: 1rem 1.125rem;
+      display: flex;
+      gap: 0.75rem;
+      transition: box-shadow 0.18s ease;
+    }
+
+    .fact-card:hover {
+      box-shadow: 0 4px 16px 0 rgba(154, 70, 20, 0.09);
+    }
+
+    .fact-icon {
+      flex-shrink: 0;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.75rem;
+      background: #fd925b22;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0.1rem;
+    }
+
+    .fact-icon .material-symbols-outlined {
+      font-size: 1.125rem;
+      color: #9a4614;
+      font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .fact-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .fact-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: #121c28;
+      line-height: 1.35;
+    }
+
+    .fact-body {
+      font-size: 0.8125rem;
+      color: #404944;
+      line-height: 1.65;
+    }
+
+    /* ===== MATH CONNECTION ===== */
+    #math-connection {
+      font-size: 0.9375rem;
+      line-height: 1.8;
+      color: #404944;
+      white-space: pre-line;
+    }
+
+    /* ===== DESCRIPTION ===== */
+    #topic-description {
+      font-size: 1rem;
+      line-height: 1.85;
+      color: #404944;
+      white-space: pre-line;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 640px) {
+      .gallery-card img {
+        aspect-ratio: 16/9;
+      }
+    }
+
+    /* ===== UTILITY ===== */
+    .section-heading {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: #003527;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+
+<body class="bg-background text-on-surface font-body min-h-screen">
+  <main class="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 pb-28">
+
+    <!-- BREADCRUMB -->
+    <nav class="mb-6 flex flex-wrap items-center gap-1.5 text-sm text-on-surface-variant" aria-label="Breadcrumb">
+      <a class="font-semibold text-primary hover:underline underline-offset-2 transition-opacity hover:opacity-80"
+        href="/budaya">Budaya</a>
+      <span class="material-symbols-outlined text-base text-outline-variant">chevron_right</span>
+      <span id="crumb" class="font-semibold text-primary"></span>
+    </nav>
+
+    <!-- HERO CARD -->
+    <section class="overflow-hidden rounded-[2rem] border border-outline-variant bg-white shadow-sm">
+      <!-- Landscape Hero Image Container (Edge-to-Edge) -->
+      <div class="relative w-full h-64 sm:h-80 md:h-[380px] lg:h-[420px] bg-surface-container-low overflow-hidden">
+        <div class="ammatoa-pattern absolute inset-0 z-0"></div>
+        <img id="hero-image" class="relative z-10 h-full w-full object-cover" alt="" loading="lazy"
+          onerror="this.src='https://placehold.co/800x600/eef4ff/003527?text=Gambar+Tidak+Tersedia'; this.onerror=null;" />
+      </div>
+      <!-- Hero Content -->
+      <div class="p-6 md:p-10">
+        <p id="topic-badge"
+          class="inline-flex w-fit rounded-full bg-secondary-container px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-on-secondary-container">
+        </p>
+        <h1 id="topic-title" class="mt-4 font-display text-3xl md:text-4xl font-extrabold text-primary leading-tight">
+        </h1>
+        <div id="topic-description" class="mt-5 text-base leading-relaxed text-on-surface-variant"></div>
+      </div>
+    </section>
+
+    <!-- MAIN GRID -->
+    <section class="mt-8 grid gap-6 lg:gap-8 lg:grid-cols-[56%_44%] xl:grid-cols-[57%_43%]">
+
+      <!-- LEFT COLUMN -->
+      <div class="space-y-6">
+
+        <!-- GALLERY -->
+        <article class="rounded-[2rem] border border-outline-variant bg-white p-6 shadow-sm">
+          <h2 class="section-heading">Galeri</h2>
+          <div id="gallery" class="grid gap-4 sm:grid-cols-2"></div>
+        </article>
+
+        <!-- MATH CONNECTION -->
+        <article class="rounded-[2rem] border border-outline-variant bg-white p-6 shadow-sm">
+          <h2 class="section-heading">Koneksi Matematika</h2>
+          <div id="math-connection" class="mt-1"></div>
+        </article>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="space-y-6">
+
+        <!-- RELATED MATERIAL -->
+        <article class="rounded-[2rem] border border-outline-variant bg-white p-6 shadow-sm">
+          <h2 class="section-heading">Materi Terkait</h2>
+          <ul id="related-material" class="space-y-3"></ul>
+        </article>
+
+        <!-- FUN FACTS -->
+        <article class="rounded-[2rem] border border-outline-variant bg-white p-6 shadow-sm">
+          <h2 class="section-heading">Fun Facts</h2>
+          <ul id="fun-facts" class="space-y-3"></ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- CTA SECTION -->
+    <section class="mt-8 rounded-[2rem] border border-outline-variant bg-primary p-8 text-on-primary shadow-sm">
+      <h2 class="font-display text-2xl font-bold">Terhubung dengan pembelajaran</h2>
+      <p class="mt-3 max-w-2xl text-sm leading-7 opacity-80">Setiap tema budaya membuka jalan baru untuk memahami
+        matematika secara bermakna dan menyenangkan. Mulai eksplorasi materimu sekarang.</p>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a class="rounded-xl bg-white px-5 py-3 font-semibold text-primary hover:bg-surface-container-low transition-colors"
+          href="/materi">Lihat Materi</a>
+        <a class="rounded-xl border border-white/30 bg-white/10 px-5 py-3 font-semibold hover:bg-white/20 transition-colors"
+          href="/latihan">Coba Latihan</a>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="dashboard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+  <script>window.PAGE_ROLE = 'student';</script>
+  <script src="/supabase.js"></script>
+  <script src="/guard.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="./budaya-detail-page.js" defer></script>
+    <!-- React Grab Development Tool -->
+    <script src="/node_modules/react-grab/dist/index.global.js" onerror="this.onerror=null;this.src='https://unpkg.com/react-grab/dist/index.global.js'"></script>
+    <script>
+      window.addEventListener('react-grab:init', () => {
+        console.log('%c[React Grab] Aktif! Arahkan kursor ke elemen UI lalu tekan Cmd+C (sekali, JANGAN ditahan) atau klik toolbar di bawah.', 'color: #047857; font-weight: bold; font-size: 13px; background: #ecfdf5; padding: 4px 8px; border-radius: 4px;');
+      });
+    </script>
+</body>
+
+</html>

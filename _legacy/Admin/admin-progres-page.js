@@ -1,0 +1,189 @@
+/**
+ * KANUM – Admin Progres Page Logic
+ */
+(function () {
+  'use strict';
+
+    let allStudents = [];
+    let allProgresses = [];
+
+    (async () => {
+      const profile = await requireAdmin();
+      if (!profile) return;
+      document.getElementById('admin-avatar').textContent = (profile.full_name || 'A')[0].toUpperCase();
+      document.getElementById('btn-logout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        try { await _sb.auth.signOut(); } catch (err) { console.warn('KANUM logout error:', err); }
+        window.location.href = '/login';
+      });
+
+      // Load exercises for filter
+      const { data: exList } = await _sb.from('exercises').select('id, title').order('title');
+      const filterEl = document.getElementById('filter-exercise');
+      (exList || []).forEach(ex => {
+        const opt = document.createElement('option');
+        opt.value = ex.id; opt.textContent = ex.title;
+        filterEl.appendChild(opt);
+      });
+
+      await loadData();
+
+      document.getElementById('search-student').addEventListener('input', renderTable);
+      document.getElementById('filter-exercise').addEventListener('change', renderTable);
+    })();
+
+    async function loadData() {
+      // Load all students
+      const { data: students } = await _sb.from('profiles').select('id,full_name,class_name,email').eq('role', 'student').order('full_name');
+      allStudents = students || [];
+
+      // Load all progress
+      const { data: progs } = await _sb.from('student_progress')
+        .select('*, exercises(title), profiles(full_name, class_name)');
+      allProgresses = progs || [];
+
+      renderTable();
+    }
+
+    function renderTable() {
+      const query = document.getElementById('search-student').value.toLowerCase();
+      const exId = document.getElementById('filter-exercise').value;
+
+      // Aggregate per student
+      let filtered = allStudents.filter(s =>
+        !query || s.full_name.toLowerCase().includes(query)
+      );
+
+      const tbody = document.getElementById('students-tbody');
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><span class="material-symbols-outlined">person</span>Tidak ada siswa ditemukan.</div></td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(s => {
+        let progs = allProgresses.filter(p => p.student_id === s.id);
+        if (exId) progs = progs.filter(p => p.exercise_id === exId);
+
+        const total = progs.length;
+        const selesai = progs.filter(p => p.is_completed).length;
+        const belum = total - selesai;
+        const bestScore = total ? Math.round(Math.max(...progs.map(p => p.best_score))) : 0;
+        const attempts = progs.reduce((sum, p) => sum + p.attempts_count, 0);
+
+        return `
+    <tr>
+      <td><strong>${s.full_name || '–'}</strong><br/><span style="font-size:.75rem;color:var(--etno-muted)">${s.email}</span></td>
+      <td>${s.class_name || '–'}</td>
+      <td style="text-align:center;font-weight:700">${total} latihan<br/><span style="font-size:.75rem;font-weight:400;color:var(--etno-muted)">${attempts} percobaan</span></td>
+      <td style="text-align:center"><span class="badge badge-green">${selesai}</span></td>
+      <td style="text-align:center"><span class="badge ${belum > 0 ? 'badge-yellow' : 'badge-gray'}">${belum}</span></td>
+      <td style="text-align:center;font-weight:800;color:var(--etno-primary);font-size:1.1rem">${bestScore || '–'}</td>
+      <td>
+        <button class="btn-secondary btn-sm" onclick="openStudentDetail('${s.id}', '${s.full_name || ''}')">
+          <span class="material-symbols-outlined" style="font-size:1rem">visibility</span>Detail
+        </button>
+      </td>
+    </tr>`;
+      }).join('');
+    }
+
+    async function openStudentDetail(studentId, name) {
+      document.getElementById('modal-student-name').textContent = 'Detail – ' + name;
+      document.getElementById('student-detail-content').innerHTML = '<div class="empty-state"><span class="kanum-spinner"></span></div>';
+      document.getElementById('modal-student').style.display = 'flex';
+
+      const { data: progs } = await _sb.from('student_progress')
+        .select('*, exercises(title, passing_score)')
+        .eq('student_id', studentId)
+        .order('last_attempt', { ascending: false });
+
+      const { data: attempts } = await _sb.from('exercise_attempts')
+        .select('id, exercise_id, score, status, started_at, finished_at, correct_count, wrong_count, exercises(title)')
+        .eq('student_id', studentId)
+        .order('started_at', { ascending: false });
+
+      if (!progs || progs.length === 0) {
+        document.getElementById('student-detail-content').innerHTML = '<div class="empty-state"><span class="material-symbols-outlined">quiz</span>Belum ada latihan yang dikerjakan.</div>';
+        return;
+      }
+
+      const html = `
+    <h4 style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--etno-muted);margin-bottom:.75rem">Ringkasan Per Latihan</h4>
+    <div style="overflow-x:auto;margin-bottom:1.5rem">
+      <table class="admin-table">
+        <thead><tr><th>Latihan</th><th>Percobaan</th><th>Nilai Terbaik</th><th>Nilai Terakhir</th><th>Status</th><th>Terakhir Dikerjakan</th></tr></thead>
+        <tbody>
+          ${(progs || []).map(p => `
+            <tr>
+              <td><strong>${p.exercises?.title || '–'}</strong></td>
+              <td style="text-align:center">${p.attempts_count}</td>
+              <td style="text-align:center;font-weight:700;color:var(--etno-primary)">${Math.round(p.best_score)}</td>
+              <td style="text-align:center">${Math.round(p.last_score)}</td>
+              <td><span class="badge ${p.is_completed ? 'badge-green' : 'badge-yellow'}">${p.is_completed ? 'Lulus' : 'Belum Lulus'}</span></td>
+              <td style="font-size:.8rem">${p.last_attempt ? new Date(p.last_attempt).toLocaleDateString('id-ID') : '–'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <h4 style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--etno-muted);margin-bottom:.75rem">Riwayat Percobaan</h4>
+    <div style="display:grid;gap:.5rem">
+      ${(attempts || []).map(a => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border:1px solid var(--etno-border);border-radius:.75rem;gap:1rem;flex-wrap:wrap">
+          <div>
+            <p style="font-weight:700;font-size:.875rem">${a.exercises?.title || '–'}</p>
+            <p style="font-size:.75rem;color:var(--etno-muted)">${a.started_at ? new Date(a.started_at).toLocaleString('id-ID') : '–'} → ${a.finished_at ? new Date(a.finished_at).toLocaleString('id-ID') : '–'}</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:.75rem">
+            <span style="font-weight:800;font-size:1.1rem;color:var(--etno-primary)">${Math.round(a.score)}</span>
+            <span class="badge badge-green">${a.correct_count} benar</span>
+            <span class="badge badge-red">${a.wrong_count} salah</span>
+            <button class="btn-secondary btn-sm" onclick="openAttemptDetail('${a.id}','${a.exercises?.title || ''}')">
+              <span class="material-symbols-outlined" style="font-size:1rem">format_list_bulleted</span>Jawaban
+            </button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+      document.getElementById('student-detail-content').innerHTML = html;
+    }
+
+    async function openAttemptDetail(attemptId, exerciseTitle) {
+      document.getElementById('modal-attempt-title').textContent = 'Jawaban – ' + exerciseTitle;
+      document.getElementById('attempt-detail-content').innerHTML = '<div class="empty-state"><span class="kanum-spinner"></span></div>';
+      document.getElementById('modal-attempt').style.display = 'flex';
+
+      const { data: answers } = await _sb.from('student_answers')
+        .select(`
+      is_correct, points_earned,
+      questions(question, explanation, points),
+      question_options(option_text)
+    `)
+        .eq('attempt_id', attemptId);
+
+      if (!answers || answers.length === 0) {
+        document.getElementById('attempt-detail-content').innerHTML = '<div class="empty-state"><span class="material-symbols-outlined">quiz</span>Tidak ada jawaban tercatat.</div>';
+        return;
+      }
+
+      const html = answers.map((a, i) => `
+    <div style="padding:.875rem 1rem;border:1px solid ${a.is_correct ? '#86efac' : '#fca5a5'};border-radius:.75rem;background:${a.is_correct ? '#f0fdf4' : '#fff5f5'};margin-bottom:.5rem">
+      <div style="display:flex;align-items:flex-start;gap:.75rem">
+        <span class="material-symbols-outlined" style="color:${a.is_correct ? '#16a34a' : '#dc2626'};flex-shrink:0">${a.is_correct ? 'check_circle' : 'cancel'}</span>
+        <div style="flex:1">
+          <p style="font-weight:700;font-size:.875rem;margin-bottom:.3rem">${i + 1}. ${a.questions?.question || '–'}</p>
+          <p style="font-size:.8rem;color:var(--etno-muted)">Jawaban: <strong>${a.question_options?.option_text || '–'}</strong></p>
+          ${!a.is_correct && a.questions?.explanation ? `<p style="font-size:.78rem;color:#15803d;margin-top:.3rem">Penjelasan: ${a.questions.explanation}</p>` : ''}
+        </div>
+        <span class="badge ${a.is_correct ? 'badge-green' : 'badge-red'}" style="flex-shrink:0">${a.points_earned}/${a.questions?.points || 0} poin</span>
+      </div>
+    </div>`).join('');
+      document.getElementById('attempt-detail-content').innerHTML = html;
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+      m.addEventListener('click', e => { if (e.target === m) m.style.display = 'none'; });
+    });
+
+})();

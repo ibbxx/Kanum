@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dev Tool - Make Admin</title>
+  <link rel="stylesheet" href="/dist/tailwind.min.css">
+  <style>
+    body { padding: 2rem; max-width: 600px; margin: 0 auto; }
+    .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; }
+    .btn-primary { background: #003527; color: white; }
+    .btn-primary:hover { background: #004d38; }
+    input { width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 0.5rem; margin: 0.5rem 0; }
+    .info { background: #e0f2fe; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; }
+    .success { background: #dcfce7; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; color: #166534; }
+    .error { background: #fee2e2; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <h1 style="font-size: 2rem; font-weight: bold; margin-bottom: 1rem;">🔧 Dev Tool: Make User Admin</h1>
+  
+  <div class="info">
+    <strong>⚠️ Development Only</strong><br>
+    Tool ini untuk development. Jangan deploy ke production!
+  </div>
+
+  <h2 style="font-weight: 600; margin: 1.5rem 0 0.5rem;">Current User Info</h2>
+  <div id="current-user" style="background: #f3f4f6; padding: 1rem; border-radius: 0.5rem;">
+    <p>Loading...</p>
+  </div>
+
+  <h2 style="font-weight: 600; margin: 1.5rem 0 0.5rem;">Make Current User Admin</h2>
+  <button class="btn btn-primary" onclick="makeCurrentUserAdmin()">
+    ✨ Make Me Admin
+  </button>
+
+  <div id="message" style="margin-top: 1rem;"></div>
+
+  <hr style="margin: 2rem 0; border: 1px solid #e5e7eb;">
+
+  <h2 style="font-weight: 600; margin: 1.5rem 0 0.5rem;">Or Make Another User Admin</h2>
+  <input type="email" id="emailInput" placeholder="Email user yang akan dijadikan admin">
+  <button class="btn btn-primary" onclick="makeUserAdminByEmail()">
+    Make Admin by Email
+  </button>
+
+  <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
+    <a href="/login" style="color: #003527; text-decoration: underline;">← Back to Login</a> |
+    <a href="/dashboard" style="color: #003527; text-decoration: underline;">Dashboard</a> |
+    <a href="/admin" style="color: #003527; text-decoration: underline;">Admin Panel</a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+  <script>window.PAGE_ROLE = 'public';</script>
+  <script src="/supabase.js"></script>
+  
+  <script>
+    async function loadCurrentUser() {
+      const session = await window.getSession();
+      const container = document.getElementById('current-user');
+      
+      if (!session) {
+        container.innerHTML = `
+          <p style="color: #991b1b;">❌ Tidak ada user yang login</p>
+          <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+            Silakan <a href="/login" style="color: #003527; text-decoration: underline;">login</a> terlebih dahulu
+          </p>
+        `;
+        return;
+      }
+
+      const profile = await window.getCurrentProfile();
+      
+      container.innerHTML = `
+        <p><strong>Email:</strong> ${session.user.email}</p>
+        <p><strong>Name:</strong> ${profile?.full_name || 'N/A'}</p>
+        <p><strong>Current Role:</strong> <span style="font-weight: bold; color: ${profile?.role === 'admin' ? '#166534' : '#ea580c'}">${profile?.role || 'student'}</span></p>
+        <p><strong>ID:</strong> <code style="font-size: 0.75rem;">${session.user.id}</code></p>
+      `;
+    }
+
+    async function makeCurrentUserAdmin() {
+      const session = await window.getSession();
+      const msg = document.getElementById('message');
+      
+      if (!session) {
+        msg.innerHTML = '<div class="error">❌ Tidak ada user yang login. Silakan login terlebih dahulu.</div>';
+        return;
+      }
+
+      msg.innerHTML = '<div class="info">⏳ Updating role...</div>';
+
+      try {
+        const { data, error } = await window._sb
+          .from('profiles')
+          .update({ role: 'admin' })
+          .eq('id', session.user.id)
+          .select();
+
+        if (error) throw error;
+
+        msg.innerHTML = `
+          <div class="success">
+            ✅ Success! User ${session.user.email} is now an admin.<br>
+            <a href="/admin" style="color: #166534; text-decoration: underline; font-weight: 600; margin-top: 0.5rem; display: inline-block;">→ Go to Admin Panel</a>
+          </div>
+        `;
+        
+        // Reload user info
+        await loadCurrentUser();
+      } catch (error) {
+        msg.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+      }
+    }
+
+    async function makeUserAdminByEmail() {
+      const email = document.getElementById('emailInput').value.trim();
+      const msg = document.getElementById('message');
+      
+      if (!email) {
+        msg.innerHTML = '<div class="error">❌ Masukkan email terlebih dahulu</div>';
+        return;
+      }
+
+      msg.innerHTML = '<div class="info">⏳ Searching user and updating role...</div>';
+
+      try {
+        // Get user by email (admin RPC or service role needed for production)
+        // For now, we'll try to update directly if the user exists
+        const { data: profiles, error: searchError } = await window._sb
+          .from('profiles')
+          .select('id, full_name, role')
+          .limit(100);
+
+        if (searchError) throw searchError;
+
+        // Note: This is a workaround. In production, you should use Supabase RPC function
+        msg.innerHTML = `
+          <div class="info">
+            ℹ️ Untuk update user by email, Anda perlu:<br>
+            1. Akses Supabase Dashboard → Table Editor → profiles<br>
+            2. Cari user dengan email: <strong>${email}</strong><br>
+            3. Update kolom <code>role</code> menjadi <code>admin</code><br><br>
+            Atau jalankan SQL query ini di SQL Editor:<br>
+            <code style="display: block; background: #1f2937; color: #f3f4f6; padding: 0.5rem; border-radius: 0.25rem; margin-top: 0.5rem; font-size: 0.75rem;">
+            UPDATE profiles SET role = 'admin' WHERE id = (SELECT id FROM auth.users WHERE email = '${email}');
+            </code>
+          </div>
+        `;
+      } catch (error) {
+        msg.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+      }
+    }
+
+    // Load current user on page load
+    loadCurrentUser();
+  </script>
+</body>
+</html>
