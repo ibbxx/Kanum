@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
@@ -12,7 +12,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   link_expired: "Tautan reset kedaluwarsa. Kirim ulang email reset.",
 };
 
-export function LupaPasswordForm() {
+export function LupaPasswordFormInner() {
   const { showToast } = useToast();
   const searchParams = useSearchParams();
   const errorCode = searchParams.get("error");
@@ -128,8 +128,7 @@ export function LupaPasswordForm() {
                 {loading ? "Mengirim..." : "Kirim Tautan Reset"}
               </button>
             </form>
-            <p className="text-center text-sm mt-6 text-on-surface-variant">
-              Sudah ingat kata sandi?{" "}
+            <p className="text-center text-sm mt-6 text-on-surface-variant">                Sudah ingat kata sandi?{" "}
               <Link href="/login" className="text-primary font-bold">
                 Masuk
               </Link>
@@ -138,5 +137,13 @@ export function LupaPasswordForm() {
         )}
       </div>
     </div>
+  );
+}
+
+export function LupaPasswordForm() {
+  return (
+    <Suspense>
+      <LupaPasswordFormInner />
+    </Suspense>
   );
 }
