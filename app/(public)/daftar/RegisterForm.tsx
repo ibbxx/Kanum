@@ -1,15 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
+import { Icon } from "@/components/Icon";
+import { AuthBrandPanel } from "@/components/layout/AuthBrandPanel";
 import { homePathForRole, resolveUserRole } from "@/lib/auth";
 
-export function RegisterForm() {
-  const router = useRouter();
+const ERROR_MESSAGES: Record<string, string> = {
+  oauth: "Gagal mendaftar dengan Google. Coba lagi.",
+};
+
+function RegisterFormInner() {
   const { showToast } = useToast();
+  const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,6 +23,13 @@ export function RegisterForm() {
   const [role, setRole] = useState<"siswa" | "guru">("siswa");
   const [terms, setTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const errorCode = searchParams.get("error");
+  const bannerMessage = errorCode
+    ? ERROR_MESSAGES[errorCode] ?? "Terjadi kesalahan. Coba lagi."
+    : null;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,7 +74,7 @@ export function RegisterForm() {
           "Akun dibuat, tapi email verifikasi tertunda. Kirim ulang di halaman berikutnya.",
           "error"
         );
-        router.push(`/cek-email?email=${encodeURIComponent(email)}`);
+        window.location.assign(`/cek-email?email=${encodeURIComponent(email)}`);
         return;
       }
       showToast("Gagal daftar: " + error.message, "error");
@@ -73,7 +86,7 @@ export function RegisterForm() {
       return;
     }
     setLoading(false);
-    router.push(`/cek-email?email=${encodeURIComponent(email)}`);
+    window.location.assign(`/cek-email?email=${encodeURIComponent(email)}`);
   }
 
   async function googleSignup() {
@@ -82,7 +95,7 @@ export function RegisterForm() {
     document.cookie = `kanum-oauth-role=${
       role === "guru" ? "teacher" : "student"
     }; path=/; max-age=1800; samesite=lax`;
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=/auth/oauth-role`,
@@ -92,104 +105,223 @@ export function RegisterForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md">
-        <Link href="/" className="text-sm text-on-surface-variant">
-          ← Beranda
-        </Link>
-        <h1 className="font-display text-3xl font-extrabold mt-6 mb-2">Daftar</h1>
-        <p className="text-on-surface-variant text-sm mb-8">Buat akun KANUM baru.</p>
-        <form onSubmit={onSubmit} className="space-y-4">
-          <input
-            className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
-            placeholder="Nama lengkap"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <input
-            className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
-            type="password"
-            placeholder="Kata sandi"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <input
-            className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
-            type="password"
-            placeholder="Ulangi kata sandi"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-          />
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                checked={role === "siswa"}
-                onChange={() => setRole("siswa")}
-              />
-              Siswa
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                checked={role === "guru"}
-                onChange={() => setRole("guru")}
-              />
-              Guru
-            </label>
-          </div>
-          <p className="text-xs text-on-surface-variant">
-            Siswa masuk ke dashboard belajar. Guru mendapat panel pengelolaan kelas &amp;
-            konten sendiri di /guru.
-          </p>
-          <label className="flex items-start gap-2 text-sm">
-            <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} />
-            <span>
-              Saya setuju dengan{" "}
-              <Link href="/terms" className="text-primary underline">
-                Syarat & Ketentuan
-              </Link>{" "}
-              dan{" "}
-              <Link href="/privacy" className="text-primary underline">
-                Kebijakan Privasi
-              </Link>
-              .
-            </span>
-          </label>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-primary text-on-primary font-bold py-3.5 rounded-xl"
-          >
-            {loading ? "Memproses..." : "Daftar Sekarang"}
-          </button>
-        </form>
-        <div className="relative my-5 flex items-center">
-          <div className="flex-grow h-px bg-outline-variant/40" />
-          <span className="px-3 text-outline text-[11px]">ATAU</span>
-          <div className="flex-grow h-px bg-outline-variant/40" />
-        </div>
-        <button
-          type="button"
-          onClick={googleSignup}
-          className="w-full border border-outline-variant py-3 rounded-xl font-semibold"
+    <div className="min-h-screen flex overflow-hidden bg-surface-container-lowest">
+      <AuthBrandPanel />
+
+      <main className="relative flex-1 flex items-center justify-center px-6 sm:px-10 py-12">
+        <Link
+          href="/"
+          className="lg:hidden absolute top-5 left-5 z-20 inline-flex items-center gap-1.5 text-on-surface-variant hover:text-on-surface font-label-md text-[12px] tracking-wide"
         >
-          Daftar dengan Google
-        </button>
-        <p className="text-center text-sm mt-6 text-on-surface-variant">
-          Sudah punya akun?{" "}
-          <Link href="/login" className="text-primary font-bold">
-            Masuk
-          </Link>
-        </p>
-      </div>
+          <Icon name="arrow_back" className="text-[18px]" />
+          Beranda
+        </Link>
+        <div className="w-full max-w-[380px]">
+          <div className="lg:hidden text-center mb-6">
+            <div className="inline-flex items-center justify-center w-11 h-11 bg-primary rounded-xl shadow-sm mb-2">
+              <Icon name="architecture" className="text-primary-fixed text-[24px]" filled />
+            </div>
+            <h1 className="font-display text-[18px] font-extrabold text-on-surface tracking-tight">
+              KANUM
+            </h1>
+            <p className="text-on-surface-variant text-[11px] mt-0.5">
+              Matematika dalam Akar Budaya
+            </p>
+          </div>
+
+          <h2 className="font-display text-[32px] font-extrabold mb-2 tracking-tight">Daftar</h2>
+          {bannerMessage && (
+            <div
+              data-testid="auth-banner"
+              className="mb-4 px-4 py-3 rounded-xl bg-error-container text-on-error-container text-sm font-medium flex items-start gap-2"
+            >
+              <Icon name="error" className="text-[18px] mt-0.5 shrink-0" />
+              <span>{bannerMessage}</span>
+            </div>
+          )}
+          <p className="text-on-surface-variant text-sm mb-8">
+            Buat akun KANUM baru dan mulai belajar.
+          </p>
+          <form onSubmit={onSubmit} className="space-y-5">
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
+                Nama Lengkap
+              </label>
+              <div className="relative">
+                <Icon
+                  name="person"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px]"
+                />
+                <input
+                  className="w-full pl-11 pr-3 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Nama Anda"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
+                Email
+              </label>
+              <div className="relative">
+                <Icon
+                  name="mail"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px]"
+                />
+                <input
+                  className="w-full pl-11 pr-3 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nama@email.com"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
+                Kata Sandi
+              </label>
+              <div className="relative">
+                <Icon
+                  name="lock"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px]"
+                />
+                <input
+                  className="w-full pl-11 pr-11 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
+                  type={showPass ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Minimal 6 karakter"
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-outline"
+                  onClick={() => setShowPass((v) => !v)}
+                >
+                  <Icon name={showPass ? "visibility_off" : "visibility"} />
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
+                Ulangi Kata Sandi
+              </label>
+              <div className="relative">
+                <Icon
+                  name="lock_reset"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px]"
+                />
+                <input
+                  className="w-full pl-11 pr-11 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
+                  type={showConfirm ? "text" : "password"}
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-outline"
+                  onClick={() => setShowConfirm((v) => !v)}
+                >
+                  <Icon name={showConfirm ? "visibility_off" : "visibility"} />
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
+                Daftar Sebagai
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRole("siswa")}
+                  className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-semibold text-sm transition-colors ${
+                    role === "siswa"
+                      ? "bg-primary text-on-primary border-primary"
+                      : "bg-surface-container-low border-outline-variant/50 text-on-surface-variant hover:border-outline"
+                  }`}
+                >
+                  <Icon name="school" className="text-[18px]" />
+                  Siswa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("guru")}
+                  className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-semibold text-sm transition-colors ${
+                    role === "guru"
+                      ? "bg-primary text-on-primary border-primary"
+                      : "bg-surface-container-low border-outline-variant/50 text-on-surface-variant hover:border-outline"
+                  }`}
+                >
+                  <Icon name="history_edu" className="text-[18px]" />
+                  Guru
+                </button>
+              </div>
+              <p className="text-xs text-on-surface-variant mt-2">
+                {role === "siswa"
+                  ? "Siswa masuk ke dashboard belajar & latihan."
+                  : "Guru mendapat panel pengelolaan kelas & konten sendiri."}
+              </p>
+            </div>
+            <label className="flex items-start gap-2.5 text-sm text-on-surface-variant">
+              <input
+                type="checkbox"
+                checked={terms}
+                onChange={(e) => setTerms(e.target.checked)}
+                className="mt-0.5 accent-primary"
+              />
+              <span>
+                Saya setuju dengan{" "}
+                <Link href="/terms" className="text-primary underline">
+                  Syarat & Ketentuan
+                </Link>{" "}
+                dan{" "}
+                <Link href="/privacy" className="text-primary underline">
+                  Kebijakan Privasi
+                </Link>
+                .
+              </span>
+            </label>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary text-on-primary font-bold py-3.5 rounded-xl"
+            >
+              {loading ? "Memproses..." : "Daftar Sekarang"}
+            </button>
+          </form>
+          <div className="relative my-6 flex items-center">
+            <div className="flex-grow h-px bg-outline-variant/40" />
+            <span className="px-3 text-outline text-[11px]">ATAU</span>
+            <div className="flex-grow h-px bg-outline-variant/40" />
+          </div>
+          <button
+            type="button"
+            onClick={googleSignup}
+            className="w-full border border-outline-variant py-3 rounded-xl font-semibold"
+          >
+            Daftar dengan Google
+          </button>
+          <p className="text-center text-sm mt-6 text-on-surface-variant">
+            Sudah punya akun?{" "}
+            <Link href="/login" className="text-primary font-bold">
+              Masuk
+            </Link>
+          </p>
+        </div>
+      </main>
     </div>
+  );
+}
+
+export function RegisterForm() {
+  return (
+    <Suspense>
+      <RegisterFormInner />
+    </Suspense>
   );
 }
