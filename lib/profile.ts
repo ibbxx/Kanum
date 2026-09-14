@@ -1,7 +1,12 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 
-export async function getProfile(): Promise<Profile | null> {
+/**
+ * cache(): hasil di-memo per request — layout & page yang sama-sama
+ * memanggil getProfile() hanya memicu SATU query ke Supabase.
+ */
+export const getProfile = cache(async (): Promise<Profile | null> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -32,4 +37,4 @@ export async function getProfile(): Promise<Profile | null> {
     status: "pending",
     avatar_url: (user.user_metadata?.avatar_url as string | undefined) || null,
   };
-}
+});

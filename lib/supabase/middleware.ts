@@ -49,6 +49,21 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+
+  // Anonim: path publik & auth tidak butuh role/status → selesai di sini.
+  if (!user) {
+    return supabaseResponse;
+  }
+
+  // Sudah login: semua path publik ringan KECUALI /login & /daftar
+  // (keduanya harus tetap diarahkan ke home di blok bawah).
+  if (
+    pathname.startsWith("/auth/") ||
+    (isPublicPath(pathname) && pathname !== "/login" && pathname !== "/daftar")
+  ) {
+    return supabaseResponse;
+  }
+
   const isAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
   const isTeacherPath = pathname === "/guru" || pathname.startsWith("/guru/");
   const isStudentPath =
@@ -59,25 +74,10 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/laporan") ||
     pathname.startsWith("/pengaturan");
 
-  if (!user) {
-    if (
-      !isPublicPath(pathname) &&
-      (isAdminPath || isTeacherPath || isStudentPath)
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      const redirect = NextResponse.redirect(url);
-      supabaseResponse.cookies.getAll().forEach((c) => {
-        redirect.cookies.set(c.name, c.value);
-      });
-      return redirect;
-    }
-    return supabaseResponse;
-  }
-
   const { role, access } = await resolveAccess(supabase, user.id);
 
-  // Login/daftar tidak relevan bagi user yang sudah masuk.
+  // Login/daftar tidak relevan bagi user yang sudah masuk —
+  // arahkan langsung ke halaman rumah sesuai aksesnya.
   if (pathname === "/login" || pathname === "/daftar") {
     const url = request.nextUrl.clone();
     url.pathname = homePathForAccess(access, role);
