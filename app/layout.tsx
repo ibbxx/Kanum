@@ -25,6 +25,10 @@ export const metadata: Metadata = {
   title: "KANUM | Belajar Matematika Melalui Budaya",
   description:
     "Platform etnomatematika Ammatoa Kajang untuk numerasi siswa SMP.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({

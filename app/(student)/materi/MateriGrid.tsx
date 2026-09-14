@@ -40,11 +40,10 @@ export function MateriGrid({ items }: { items: Materi[] }) {
               key={l}
               type="button"
               onClick={() => setLevel(l)}
-              className={`px-4 py-2 rounded-full text-sm font-bold ${
-                level === l
+              className={`px-4 py-2 rounded-full text-sm font-bold ${level === l
                   ? "bg-primary text-on-primary"
                   : "bg-surface-container border border-outline-variant"
-              }`}
+                }`}
             >
               {l}
             </button>

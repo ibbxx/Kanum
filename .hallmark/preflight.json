@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-15",
+  "project": "KANUM (kanum v2.0.0 — Kajang Numerasi, etnomatematika Ammatoa Kajang)",
+  "framework": "Next.js 15 App Router, React 19, TypeScript (package.json)",
+  "styling": "Tailwind CSS 3.4, custom semantic token palette (Material-3-style hex roles) in tailwind.config.ts; brand pattern utilities in app/globals.css (ammatoa-pattern, cultural-divider, cultural-pattern, panel-curve, weave-float)",
+  "font_stack": "Plus Jakarta Sans (display) + Inter (body), self-hosted via next/font variables --font-plus-jakarta / --font-inter (app/layout.tsx); Material Symbols Outlined via CDN with IconGate FOUC gate",
+  "color_system": "Named semantic tokens (primary/secondary/tertiary/surface/error + on-*/container/fixed roles), hex values — not OKLCH. Hardcoded hex/white/black bypasses tokens in several components.",
+  "spacing": "Partial semantic tokens (gutter, stack-sm/md/lg, margin-mobile/desktop, container-max); most components use raw Tailwind spacing (p-6, py-24, mb-16)",
+  "motion": "Motion-cut — no animation library. CSS-only: weaveFloat keyframes with prefers-reduced-motion support, Tailwind animate-pulse skeletons. No duration/easing tokens.",
+  "component_system": "Bespoke small set: Icon, Toast (single-toast context), SmartImage, IconGate, VerifikasiPanel, shells (StudentShell/AdminShell/GuruShell), AuthBrandPanel, LogoutButton. No UI kit (no Radix/shadcn). Forms hand-rolled.",
+  "responsive_strategy": "Mobile-aware (student bottom nav, lg: auth brand panel, overflow-x-auto table wrappers) but not verified at 320px; no root overflow-x clip; fixed px type scale (48/32/24) without fluid clamps",
+  "route_map": "public: / /login /daftar /daftar/lengkapi /verifikasi /cek-email /privacy /terms; student: /dashboard /materi /budaya /latihan /laporan /pengaturan; guru: /guru (+kelas latihan soal materi budaya progres); admin: /admin (+verifikasi latihan soal progres materi budaya akun)",
+  "hallmark_will_preserve": [
+    "brand palette + token names (M3-style hex roles)",
+    "Plus Jakarta Sans + Inter pairing",
+    "cultural motifs (ammatoa-pattern, cultural-divider, weave-float, panel-curve)",
+    "information architecture, all routes, all business logic",
+    "existing component ownership (Icon/Toast/SmartImage/shells)",
+    "student bottom-nav mobile pattern"
+  ],
+  "hallmark_will_introduce": [
+    "mobile hard floor: overflow-x clip on html/body, 320px verification, fluid display type",
+    "state discipline: :focus-visible ring tokens, active/disabled/loading states on interactive elements",
+    "a11y repairs: label-input association, dialog semantics/focus management, aria-live toasts, icon-button accessible names",
+    "missing tokens: radius scale consolidation, motion durations/easings, focus ring, z-index scale",
+    "structural variety on the landing page (break 3-equal-icon-tile symmetry)"
+  ],
+  "no_new_dependencies": true
+}
