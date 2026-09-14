@@ -117,13 +117,31 @@ export function SoalAdmin({
       showToast("Gunakan JPG, PNG, atau WebP.", "error");
       return false as const;
     }
+    // Samakan dengan file_size_limit bucket (Supabase/005_storage_setup.sql).
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Ukuran gambar maksimal 5 MB.", "error");
+      return false as const;
+    }
     const supabase = createClient();
     const filename = `${userId}/${questionId}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage
       .from("question-images")
-      .upload(filename, file, { upsert: true, contentType: file.type });
+      .upload(filename, file, {
+        upsert: true,
+        // file.type bisa kosong di sebagian browser → fallback dari ekstensi.
+        contentType: file.type || `image/${ext === "jpg" ? "jpeg" : ext}`,
+      });
     if (error) {
-      showToast("Gagal upload: " + error.message, "error");
+      // Konteks operasi + bucket agar mudah didiagnosis; tanpa secret.
+      showToast(
+        `Gagal upload gambar (storage:question-images): ${error.message}`,
+        "error"
+      );
+      console.error("[SoalAdmin] storage upload gagal:", {
+        bucket: "question-images",
+        path: filename,
+        message: error.message,
+      });
       return false as const;
     }
     const { data } = supabase.storage.from("question-images").getPublicUrl(filename);
@@ -135,9 +153,12 @@ export function SoalAdmin({
       const parts = new URL(url).pathname.split("/question-images/");
       if (parts.length < 2) return;
       const supabase = createClient();
-      await supabase.storage.from("question-images").remove([parts[1]]);
-    } catch {
-      /* ignore */
+      const { error } = await supabase.storage
+        .from("question-images")
+        .remove([parts[1]]);
+      if (error) console.warn("[SoalAdmin] gagal hapus gambar lama:", error.message);
+    } catch (e) {
+      console.warn("[SoalAdmin] gagal hapus gambar lama:", e);
     }
   }
 
@@ -162,6 +183,9 @@ export function SoalAdmin({
     if (!user) return;
     const qId = editingId || crypto.randomUUID();
     let imageUrl = existingImage;
+    // URL gambar yang BARU diupload sesi ini — dihapus bila insert/update
+    // DB gagal agar tidak ada file orphan di storage.
+    let newlyUploaded: string | null = null;
     if (removeImage && imageUrl) {
       await deleteStoredImage(imageUrl);
       imageUrl = null;
@@ -170,6 +194,7 @@ export function SoalAdmin({
       const uploaded = await uploadImage(imageFile, user.id, qId);
       if (uploaded === false) return;
       imageUrl = uploaded;
+      newlyUploaded = uploaded;
     }
 
     const payload = {
@@ -195,12 +220,14 @@ export function SoalAdmin({
         })
         .eq("id", editingId);
       if (error) {
+        if (newlyUploaded) await deleteStoredImage(newlyUploaded);
         showToast(error.message, "error");
         return;
       }
     } else {
       const { error } = await supabase.from("questions").insert(payload);
       if (error) {
+        if (newlyUploaded) await deleteStoredImage(newlyUploaded);
         showToast(error.message, "error");
         return;
       }
