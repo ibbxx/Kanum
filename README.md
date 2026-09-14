@@ -19,7 +19,7 @@ Isi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` dari Supabase
 
 4. Authentication → URL Configuration:
    - Site URL: `http://localhost:3000` (dev) atau URL Vercel
-   - Redirect URLs: `http://localhost:3000/auth/callback`, `/auth/confirm`, `/auth/reset`, `/daftar`
+   - Redirect URLs: `http://localhost:3000/auth/callback`, `/auth/confirm`, `/daftar`
 
 Role: **siswa** → `/dashboard`. **Guru** → `/guru` (pengelolaan kelas & konten miliknya). **Admin** → `/admin` (semua + kelola akun). Tutorial lengkap setup (migrasi, URL, email, Resend): [`Supabase/docs/TUTORIAL.md`](Supabase/docs/TUTORIAL.md).
 

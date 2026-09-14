@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
+import { Icon } from "@/components/Icon";
 import type { UserRole } from "@/lib/types";
 
 type Akun = {
@@ -26,6 +27,7 @@ export function KelolaAkun() {
   const [rows, setRows] = useState<Akun[]>([]);
   const [q, setQ] = useState("");
   const [pending, setPending] = useState<{ akun: Akun; role: UserRole } | null>(null);
+  const [hapus, setHapus] = useState<Akun | null>(null);
 
   async function load() {
     const supabase = createClient();
@@ -63,6 +65,23 @@ export function KelolaAkun() {
     await load();
   }
 
+  async function deleteAkun() {
+    if (!hapus) return;
+    const supabase = createClient();
+    // RPC admin_delete_account: hapus auth user + semua data terkait.
+    // DB menolak bila: bukan admin, akun sendiri, atau admin terakhir.
+    const { error } = await supabase.rpc("admin_delete_account", {
+      p_user_id: hapus.id,
+    });
+    if (error) {
+      showToast("Gagal menghapus: " + error.message, "error");
+      return;
+    }
+    showToast(`Akun ${hapus.full_name || hapus.email} dihapus`);
+    setHapus(null);
+    await load();
+  }
+
   const filtered = rows.filter(
     (a) =>
       !q ||
@@ -90,12 +109,13 @@ export function KelolaAkun() {
               <th>Email</th>
               <th>Role</th>
               <th>Ubah Role</th>
+              <th>Hapus</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-center py-8 text-on-surface-variant">
+                <td colSpan={5} className="text-center py-8 text-on-surface-variant">
                   Tidak ada akun cocok.
                 </td>
               </tr>
@@ -142,6 +162,20 @@ export function KelolaAkun() {
                       <option value="admin">Admin</option>
                     </select>
                   </td>
+                  <td>
+                    <button
+                      type="button"
+                      title={
+                        a.role === "admin"
+                          ? "Admin terakhir tidak dapat dihapus"
+                          : "Hapus akun ini"
+                      }
+                      className="text-error hover:opacity-70 p-1"
+                      onClick={() => setHapus(a)}
+                    >
+                      <Icon name="delete" className="text-[18px]" />
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
@@ -172,6 +206,36 @@ export function KelolaAkun() {
                 className="bg-primary text-on-primary px-4 py-2 rounded-xl font-bold"
               >
                 Ya, Ubah
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {hapus ? (
+        <div className="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm">
+            <h3 className="font-bold mb-2 text-error">Hapus akun ini?</h3>
+            <p className="text-sm text-on-surface-variant mb-4">
+              <strong>{hapus.full_name || "—"}</strong> ({hapus.email}) akan
+              dihapus permanen bersama seluruh datanya: keanggotaan kelas,
+              progres &amp; riwayat latihan.
+              {hapus.role === "admin" &&
+                " Akun ini ADMIN — sistem membutuhkan minimal satu admin, jadi penghapusan bisa ditolak."}
+            </p>
+            <p className="text-xs text-on-surface-variant mb-4">
+              Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setHapus(null)}>
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => void deleteAkun()}
+                className="bg-error text-on-error px-4 py-2 rounded-xl font-bold"
+              >
+                Ya, Hapus
               </button>
             </div>
           </div>

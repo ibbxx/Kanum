@@ -9,6 +9,7 @@ Jalankan berurutan di **Supabase → SQL Editor**. Semua file idempotent
 | 2 | [`001_multi_role.sql`](./001_multi_role.sql) | Sistem tiga peran (siswa/guru/admin): role `teacher`, tabel kelas & anggota, RLS per pemilik |
 | 3 | [`002_verification_flow.sql`](./002_verification_flow.sql) | Verifikasi akun: status `pending/approved/rejected`, akun baru pending, verifikasi siswa oleh guru & guru oleh admin (RPC berotoritas), anti-eskalasi via column privilege |
 | 4 | [`003_performance_indexes.sql`](./003_performance_indexes.sql) | Index performa: profil by email & (role,status), kelas/anggota, attempt/progres, konten published |
+| 5 | [`004_delete_account.sql`](./004_delete_account.sql) | Hapus akun oleh admin (RPC): hapus auth user + data terkait; admin terakhir & akun sendiri tidak bisa dihapus |
 
 Cara menjalankan:
 1. Buka [supabase.com/dashboard](https://supabase.com/dashboard) → project KANUM.

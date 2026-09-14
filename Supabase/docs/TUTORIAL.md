@@ -26,7 +26,6 @@ Tanpa ini, semua link email ditolak Supabase.
    ```
    https://kanum-nine.vercel.app/auth/confirm
    https://kanum-nine.vercel.app/auth/callback
-   https://kanum-nine.vercel.app/auth/reset
    https://kanum-nine.vercel.app/daftar
    ```
 
@@ -34,13 +33,12 @@ Tanpa ini, semua link email ditolak Supabase.
    ```
    http://localhost:3000/auth/confirm
    http://localhost:3000/auth/callback
-   http://localhost:3000/auth/reset
    http://localhost:3000/daftar
    ```
 6. Hapus URL lama yang tidak dipakai (ikon tempat sampah).
 7. Klik **Save changes**.
 
-**✅ Tanda berhasil:** 8 Redirect URLs (4 produksi + 4 dev) tersimpan tanpa error.
+**✅ Tanda berhasil:** 6 Redirect URLs (3 produksi + 3 dev) tersimpan tanpa error.
 
 > **Dev vs Produksi:** link email di-generate ke **Site URL**. Dengan Site URL
 > produksi, email selalu membuka `kanum-nine.vercel.app` — aman, karena halaman
@@ -73,14 +71,6 @@ Tanpa ini, semua link email ditolak Supabase.
 ```
 
 3. **Save**. ⚠️ Jangan hapus `{{ .ConfirmationURL }}`.
-
-## 3.2 — "Reset Password"
-
-1. Templates → klik **Reset Password**.
-2. Ganti isinya sama dengan kode di atas, hanya ubah:
-   - Judul → `Atur Ulang Kata Sandi KANUM`
-   - Teks tombol → `Atur Ulang Kata Sandi`
-3. **Save**.
 
 ---
 
@@ -173,12 +163,7 @@ nyata (bisa dibuka dari HP juga).
 2. Klik **Kirim Ulang Email Verifikasi** → tunggu cooldown 60 detik → klik lagi.
 3. **✅** Terkirim semua, tanpa galat 429.
 
-## Uji 3 — Lupa Kata Sandi
-1. `/login` → **Lupa kata sandi?** → isi email → **Kirim Tautan Reset**.
-2. Inbox → klik **Atur Ulang Kata Sandi** → isi sandi baru 2× → **Simpan**.
-3. **✅** Otomatis masuk dashboard sesuai peran.
-
-## Uji 4 — Google
+## Uji 3 — Google
 1. `/daftar` → pilih role → **Daftar dengan Google** → pilih akun.
 2. **✅** Masuk sesuai role: siswa → `/dashboard`, guru → `/guru`.
 
@@ -217,9 +202,8 @@ Dev      : http://localhost:3000
 Site URL      : https://kanum-nine.vercel.app
 Redirect URLs : https://kanum-nine.vercel.app/auth/confirm
                 https://kanum-nine.vercel.app/auth/callback
-                https://kanum-nine.vercel.app/auth/reset
                 https://kanum-nine.vercel.app/daftar
-                (+ 4 padanan http://localhost:3000/... untuk dev)
+                (+ 3 padanan http://localhost:3000/... untuk dev)
 
 ── SMTP ───────────────────────────────────────────────
 Host     : smtp.resend.com   Port : 465

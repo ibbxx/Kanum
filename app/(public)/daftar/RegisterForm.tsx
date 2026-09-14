@@ -10,6 +10,9 @@ import { AuthBrandPanel } from "@/components/layout/AuthBrandPanel";
 
 const ERROR_MESSAGES: Record<string, string> = {
   oauth: "Gagal mendaftar dengan Google. Coba lagi.",
+  // OAuth dari /daftar dengan email yang sudah punya akun KANUM
+  // (role apa pun) — satu email = satu akun, arahkan ke sign-in.
+  already_registered: "Email ini sudah terdaftar. Silakan masuk.",
 };
 
 function RegisterFormInner() {
@@ -17,31 +20,89 @@ function RegisterFormInner() {
   const searchParams = useSearchParams();
   const [role, setRole] = useState<"siswa" | "guru">("siswa");
   const [loading, setLoading] = useState(false);
+  // Form email & kata sandi (alternatif Google) — alur verifikasi sama.
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [className, setClassName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
 
   const errorCode = searchParams.get("error");
   const bannerMessage = errorCode
     ? ERROR_MESSAGES[errorCode] ?? "Terjadi kesalahan. Coba lagi."
     : null;
 
-  async function googleSignup() {
+  const dbRole = role === "guru" ? "teacher" : "student";
+
+  async function emailSignup(e: React.FormEvent) {
+    e.preventDefault();
+    if (!fullName.trim()) {
+      showToast("Isi nama lengkap", "error");
+      return;
+    }
+    if (password.length < 6) {
+      showToast("Kata sandi minimal 6 karakter", "error");
+      return;
+    }
+    setLoading(true);
+    const supabase = createClient();
+    // Metadata full_name/class_name/role dipetakan trigger handle_new_user
+    // → profil baru SELALU status 'pending' (dibuat via SQL, bukan client).
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName.trim(),
+          role: dbRole,
+          ...(dbRole === "student" && className.trim()
+            ? { class_name: className.trim() }
+            : {}),
+        },
+        emailRedirectTo: `${window.location.origin}/auth/confirm?next=/verifikasi`,
+      },
+    });
+    setLoading(false);
+    if (error) {
+      showToast("Gagal mendaftar: " + error.message, "error");
+      return;
+    }
+    // Anti-enumerasi Supabase: email sudah terdaftar → session null +
+    // identities kosong (bukan error). Arahkan ke login, bukan cek-email.
+    if (!data.session && data.user && (data.user.identities?.length ?? 0) === 0) {
+      showToast("Email sudah terdaftar. Silakan masuk.", "error");
+      return;
+    }
+    if (data.session) {
+      // Konfirmasi email dimatikan → langsung ke halaman verifikasi.
+      window.location.assign("/verifikasi");
+      return;
+    }
+    // Email konfirmasi terkirim → verifikasi email dulu, lalu /verifikasi.
+    window.location.assign(`/cek-email?email=${encodeURIComponent(email)}`);
+  }
+
+  function googleSignup() {
     setLoading(true);
     const supabase = createClient();
     // Simpan pilihan pengajuan — diterapkan oleh /auth/oauth-role setelah
     // OAuth kembali. Pilihan = PENGAJUAN, bukan hak akses: akun baru selalu
     // berstatus pending sampai diverifikasi (guru utk siswa, admin utk guru).
-    document.cookie = `kanum-oauth-role=${
-      role === "guru" ? "teacher" : "student"
-    }; path=/; max-age=1800; samesite=lax`;
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/auth/oauth-role`,
-      },
-    });
-    if (error) {
-      setLoading(false);
-      showToast("Gagal: " + error.message, "error");
-    }
+    document.cookie = `kanum-oauth-role=${dbRole}; path=/; max-age=1800; samesite=lax`;
+    void supabase.auth
+      .signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/auth/oauth-role`,
+        },
+      })
+      .then(({ error }) => {
+        if (error) {
+          setLoading(false);
+          showToast("Gagal: " + error.message, "error");
+        }
+      });
   }
 
   return (
@@ -80,8 +141,8 @@ function RegisterFormInner() {
             </div>
           )}
           <p className="text-on-surface-variant text-sm mb-8">
-            Daftar menggunakan akun Google, lalu pengajuan Anda diverifikasi
-            oleh pihak sekolah sebelum akun aktif.
+            Daftar sebagai siswa atau guru. Setiap pengajuan — lewat Google
+            maupun email — diverifikasi pihak sekolah sebelum akun aktif.
           </p>
 
           <div>
@@ -136,6 +197,119 @@ function RegisterFormInner() {
             </svg>
             {loading ? "Mengalihkan ke Google..." : "Daftar dengan Google"}
           </button>
+
+          {!showEmailForm ? (
+            <>
+              <div className="relative my-6 flex items-center">
+                <div className="flex-grow h-px bg-outline-variant/40" />
+                <span className="px-3 text-outline text-[11px]">ATAU</span>
+                <div className="flex-grow h-px bg-outline-variant/40" />
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEmailForm(true)}
+                className="w-full border border-outline-variant py-3 rounded-xl font-semibold inline-flex items-center justify-center gap-2 text-on-surface-variant hover:bg-surface-container-low transition-colors"
+              >
+                <Icon name="mail" className="text-[18px]" />
+                Daftar dengan Email &amp; Kata Sandi
+              </button>
+            </>
+          ) : (
+            <form onSubmit={emailSignup} className="mt-6 space-y-4">
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
+                  Nama Lengkap
+                </label>
+                <div className="relative">
+                  <Icon
+                    name="person"
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px]"
+                  />
+                  <input
+                    className="w-full pl-11 pr-3 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Nama sesuai sekolah"
+                    required
+                  />
+                </div>
+              </div>
+              {role === "siswa" && (
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
+                    Kelas (opsional)
+                  </label>
+                  <div className="relative">
+                    <Icon
+                      name="groups"
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px]"
+                    />
+                    <input
+                      className="w-full pl-11 pr-3 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
+                      type="text"
+                      value={className}
+                      onChange={(e) => setClassName(e.target.value)}
+                      placeholder="cth. VII A"
+                    />
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
+                  Email
+                </label>
+                <div className="relative">
+                  <Icon
+                    name="mail"
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px]"
+                  />
+                  <input
+                    className="w-full pl-11 pr-3 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="nama@email.com"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
+                  Kata Sandi
+                </label>
+                <div className="relative">
+                  <Icon
+                    name="lock"
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px]"
+                  />
+                  <input
+                    className="w-full pl-11 pr-11 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
+                    type={showPass ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Minimal 6 karakter"
+                    minLength={6}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-outline"
+                    onClick={() => setShowPass((v) => !v)}
+                  >
+                    <Icon name={showPass ? "visibility_off" : "visibility"} />
+                  </button>
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-primary text-on-primary font-bold py-3.5 rounded-xl disabled:opacity-50"
+              >
+                {loading ? "Mendaftar..." : "Kirim Pengajuan Pendaftaran"}
+              </button>
+            </form>
+          )}
 
           <p className="text-center text-sm mt-6 text-on-surface-variant">
             Sudah punya akun?{" "}

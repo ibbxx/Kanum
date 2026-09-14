@@ -23,7 +23,22 @@ export async function GET(request: Request) {
 
   const access = user
     ? await resolveAccess(supabase, user.id)
-    : { role: "student" as const, status: "pending" as const, access: "pending" as const };
+    : {
+        role: "student" as const,
+        status: "pending" as const,
+        access: "pending" as const,
+        hasProfile: false,
+      };
+
+  // NIAT SIGN-IN (callback tanpa next=/auth/oauth-role):
+  // email belum terdaftar → JANGAN ubah sign-in menjadi sign-up.
+  // resolveAccess sengaja TIDAK membuat profil via ensure_own_profile
+  // untuk kasus ini; tanpa profil = belum terdaftar.
+  const isLoginIntent = next !== "/auth/oauth-role";
+  if (isLoginIntent && user && !access.hasProfile) {
+    await supabase.auth.signOut();
+    return NextResponse.redirect(`${origin}/login?error=not_registered`);
+  }
 
   const dest =
     next && next === "/auth/oauth-role"

@@ -36,8 +36,10 @@ export function homePathForAccess(
 }
 
 /**
- * Baca role + status profil user. Fallback: buat profil via RPC
- * ensure_own_profile (status awal 'pending' — menunggu verifikasi).
+ * Baca role + status profil user.
+ * hasProfile=false → akun belum terdaftar di KANUM (belum punya profil).
+ * Pemanggil menentukan kebijakan: callback login-intent menolak akses;
+ * handle_new_user (trigger DB) tetap satu-satunya pembuat profil saat signup.
  */
 export async function resolveAccess(
   supabase: {
@@ -45,7 +47,12 @@ export async function resolveAccess(
     rpc: (fn: string, args?: Record<string, unknown>) => PromiseLike<{ data: unknown }>;
   },
   userId: string
-): Promise<{ role: UserRole; status: "pending" | "approved" | "rejected"; access: AccessState }> {
+): Promise<{
+  role: UserRole;
+  status: "pending" | "approved" | "rejected";
+  access: AccessState;
+  hasProfile: boolean;
+}> {
   const query = supabase.from("profiles") as {
     select: (columns: string) => {
       eq: (
@@ -60,15 +67,8 @@ export async function resolveAccess(
     .eq("id", userId)
     .maybeSingle();
 
-  let role = profile?.role ?? null;
-  let status = profile?.status ?? null;
-
-  if (!profile) {
-    const { data: ensured } = await supabase.rpc("ensure_own_profile");
-    const ensuredRow = ensured as ProfileRow | null;
-    role = ensuredRow?.role ?? "student";
-    status = ensuredRow?.status ?? "pending";
-  }
+  const role = profile?.role ?? null;
+  const status = profile?.status ?? null;
 
   const effectiveRole: UserRole =
     role === "admin" ? "admin" : role === "teacher" ? "teacher" : "student";
@@ -79,5 +79,6 @@ export async function resolveAccess(
     role: effectiveRole,
     status: effectiveStatus,
     access: accessStateFor(effectiveRole, effectiveStatus),
+    hasProfile: !!profile,
   };
 }

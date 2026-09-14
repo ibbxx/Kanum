@@ -52,7 +52,7 @@ BEGIN
     ELSE 'student'  -- 'admin' sengaja TIDAK dihormati dari metadata publik
   END;
 
-  INSERT INTO public.profiles (id, full_name, email, role, status, avatar_url)
+  INSERT INTO public.profiles (id, full_name, email, class_name, role, status, avatar_url)
   VALUES (
     NEW.id,
     COALESCE(
@@ -62,6 +62,7 @@ BEGIN
       ''
     ),
     COALESCE(NEW.email, ''),
+    COALESCE(NEW.raw_user_meta_data->>'class_name', ''),
     v_db_role,
     'pending',
     COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture')
@@ -111,11 +112,12 @@ BEGIN
     ELSE 'student'
   END;
 
-  INSERT INTO public.profiles (id, full_name, email, role, status, avatar_url)
+  INSERT INTO public.profiles (id, full_name, email, class_name, role, status, avatar_url)
   VALUES (
     uid,
     COALESCE(meta->>'full_name', meta->>'name', split_part(COALESCE(auth.jwt()->>'email', ''), '@', 1), ''),
     COALESCE(auth.jwt()->>'email', ''),
+    COALESCE(meta->>'class_name', ''),
     v_role,
     'pending',
     COALESCE(meta->>'avatar_url', meta->>'picture')
@@ -150,6 +152,11 @@ GRANT UPDATE (full_name, class_name, avatar_url) ON TABLE public.profiles TO aut
 -- 4. RPC: KLAIM ROLE SAAT OAUTH (status-aware)
 --    Akun baru (≤10 menit, masih pending) boleh mengubah role yang
 --    DIAJUKAN. Status TIDAK berubah — tetap pending sampai diverifikasi.
+--    Return:
+--      'claimed'  → role pengajuan diterapkan pada akun baru
+--      'existing' → email sudah terdaftar sebelumnya; TIDAK ada role/
+--                   verification request kedua yang dibuat/diubah.
+--                   Satu email = satu akun = satu role (kebijakan KANUM).
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.claim_signup_role(p_role TEXT)
 RETURNS TEXT
@@ -171,14 +178,33 @@ BEGIN
     AND created_at > now() - INTERVAL '10 minutes'
   RETURNING role INTO v_role;
 
-  IF v_role IS NULL THEN
-    SELECT role INTO v_role FROM public.profiles WHERE id = auth.uid();
+  IF v_role IS NOT NULL THEN
+    RETURN 'claimed';
   END IF;
-  RETURN COALESCE(v_role, 'student');
+
+  -- Bukan akun baru (atau sudah pernah diproses) → existing account.
+  -- Jangan ubah apa pun: role/status existing tetap.
+  RETURN 'existing';
 END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.claim_signup_role(TEXT) TO authenticated;
+
+-- ============================================================
+-- 4b. SATELIT ANTI-DUPLIKAT: satu email = satu profil.
+--     Sumber kebenaran utama tetap auth.users.email (unique bawaan
+--     Supabase). Index ini lapisan kedua di level profiles.
+--     Email kosong ('', warisan data lama) dikecualikan.
+-- ============================================================
+DO $$
+BEGIN
+  CREATE UNIQUE INDEX IF NOT EXISTS uq_profiles_email
+    ON public.profiles (lower(email))
+    WHERE email <> '';
+EXCEPTION WHEN others THEN
+  RAISE WARNING 'uq_profiles_email gagal dibuat: %', SQLERRM;
+  RAISE WARNING 'Ada email ganda di profiles — bersihkan duplikat lalu jalankan ulang file ini.';
+END $$;
 
 -- ============================================================
 -- 5. RPC VERIFIKASI — GERBANG TUNGGAL BEROTORITAS DI DATABASE
