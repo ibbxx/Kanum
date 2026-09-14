@@ -89,6 +89,14 @@ export function KelolaAkun() {
       a.email.toLowerCase().includes(q.toLowerCase())
   );
 
+  // UX-only guard: backend (Supabase/008_admin_guard.sql) tetap
+  // otoritatif — bila dilewati, DB menolak dan pesannya ditampilkan.
+  const approvedAdminCount = rows.filter(
+    (a) => a.role === "admin" && a.status === "approved"
+  ).length;
+  const isLastApprovedAdmin = (a: Akun) =>
+    approvedAdminCount <= 1 && a.role === "admin" && a.status === "approved";
+
   return (
     <div>
       <p className="text-sm text-on-surface-variant mb-4">
@@ -151,8 +159,14 @@ export function KelolaAkun() {
                   </td>
                   <td>
                     <select
-                      className="px-2 py-1.5 rounded-xl border border-outline-variant text-sm"
+                      className="px-2 py-1.5 rounded-xl border border-outline-variant text-sm disabled:opacity-50"
                       value={a.role}
+                      disabled={isLastApprovedAdmin(a)}
+                      title={
+                        isLastApprovedAdmin(a)
+                          ? "Admin terakhir tidak dapat diturunkan atau dihapus."
+                          : undefined
+                      }
                       onChange={(e) =>
                         setPending({ akun: a, role: e.target.value as UserRole })
                       }
@@ -161,16 +175,22 @@ export function KelolaAkun() {
                       <option value="teacher">Guru</option>
                       <option value="admin">Admin</option>
                     </select>
+                    {isLastApprovedAdmin(a) && (
+                      <p className="mt-1 max-w-48 text-[10px] text-on-surface-variant">
+                        Admin terakhir tidak dapat diturunkan atau dihapus.
+                      </p>
+                    )}
                   </td>
                   <td>
                     <button
                       type="button"
+                      disabled={isLastApprovedAdmin(a)}
                       title={
-                        a.role === "admin"
-                          ? "Admin terakhir tidak dapat dihapus"
+                        isLastApprovedAdmin(a)
+                          ? "Admin terakhir tidak dapat dihapus atau diturunkan. Sistem harus memiliki minimal satu admin."
                           : "Hapus akun ini"
                       }
-                      className="text-error hover:opacity-70 p-1"
+                      className="text-error hover:opacity-70 p-1 disabled:opacity-40 disabled:cursor-not-allowed"
                       onClick={() => setHapus(a)}
                     >
                       <Icon name="delete" className="text-[18px]" />
@@ -196,6 +216,12 @@ export function KelolaAkun() {
                   ? " dengan panel pengelolaan kelas & konten di /guru."
                   : "."}
             </p>
+            {isLastApprovedAdmin(pending.akun) &&
+              pending.role !== "admin" && (
+              <p className="text-xs mb-4 px-3 py-2 rounded-xl bg-error-container text-on-error-container">
+                Admin terakhir tidak dapat dihapus atau diturunkan. Sistem harus memiliki minimal satu admin.
+              </p>
+            )}
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setPending(null)}>
                 Batal
