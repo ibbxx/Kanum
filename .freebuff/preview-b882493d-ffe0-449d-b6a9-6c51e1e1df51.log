@@ -10865,3 +10865,649 @@ Require stack:
     at stringify (<anonymous>) {
   digest: '2857186118'
 }
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '1152228797'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '1152228797'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '1152228797'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ [TypeError: __webpack_modules__[moduleId] is not a function] {
+  digest: '599101328'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+[TypeError: __webpack_modules__[moduleId] is not a function]
+ ⨯ [TypeError: __webpack_modules__[moduleId] is not a function]
+ ⨯ [TypeError: __webpack_modules__[moduleId] is not a function] {
+  page: '/guru/kelas'
+}
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(guru)/guru/soal/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: __webpack_modules__[moduleId] is not a function] {
+  page: '/guru/kelas'
+}
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(guru)/guru/soal/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ GET /guru/kelas 500 in 2427ms
+ GET /guru/kelas 500 in 32ms
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '2857186118'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '1152228797'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '1152228797'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '1152228797'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ [TypeError: __webpack_modules__[moduleId] is not a function] {
+  digest: '599101328'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+[TypeError: __webpack_modules__[moduleId] is not a function]
+ ⨯ [TypeError: __webpack_modules__[moduleId] is not a function]
+ ⨯ [TypeError: __webpack_modules__[moduleId] is not a function] {
+  page: '/guru/kelas'
+}
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(guru)/guru/soal/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: __webpack_modules__[moduleId] is not a function] {
+  page: '/guru/kelas'
+}
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(guru)/guru/soal/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ GET /guru/kelas 500 in 2519ms
+ GET /guru/kelas 500 in 34ms
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '2857186118'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '1152228797'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '1152228797'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>)
+    at stringify (<anonymous>) {
+  digest: '1152228797'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+ ⨯ [TypeError: __webpack_modules__[moduleId] is not a function] {
+  digest: '599101328'
+}
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '3776508946'
+}
+[TypeError: __webpack_modules__[moduleId] is not a function]
+ ⨯ [TypeError: __webpack_modules__[moduleId] is not a function]
+ ⨯ [TypeError: __webpack_modules__[moduleId] is not a function] {
+  page: '/guru/kelas'
+}
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(guru)/guru/soal/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: __webpack_modules__[moduleId] is not a function] {
+  page: '/guru/kelas'
+}
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(guru)/guru/soal/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ GET /guru/kelas 500 in 2298ms
+ GET /guru/kelas 500 in 36ms
+ ⨯ Error: Could not find the module "/Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in the React Server Components bundler.
+    at stringify (<anonymous>) {
+  digest: '2857186118'
+}
+ ✓ Compiled in 1008ms (1171 modules)
+ ✓ Compiled in 427ms (1171 modules)
+ ✓ Compiled in 378ms (1171 modules)
+ ✓ Compiled in 784ms (1171 modules)
+ ✓ Compiled in 435ms (1171 modules)
+ ✓ Compiled in 839ms (1157 modules)
+ ○ Compiling /guru/kelas ...
+ ✓ Compiled /guru/kelas in 561ms (669 modules)
+ ⨯ Error: ENOENT: no such file or directory, open '/Users/ibnufajar/Documents/project/KANUM/.next/server/vendor-chunks/next.js'
+    at <unknown> (.next/server/app/(guru)/guru/kelas/page.js:496:47)
+    at Object.<anonymous> (.next/server/app/(guru)/guru/kelas/page.js:499:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/ibnufajar/Documents/project/KANUM/.next/server/vendor-chunks/next.js',
+  page: '/guru/kelas'
+}
+ ✓ Compiled /_error in 368ms (1259 modules)
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/pages/_document.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+Error: ENOENT: no such file or directory, open '/Users/ibnufajar/Documents/project/KANUM/.next/server/vendor-chunks/next.js'
+    at <unknown> (.next/server/app/(guru)/guru/kelas/page.js:496:47)
+    at Object.<anonymous> (.next/server/app/(guru)/guru/kelas/page.js:499:3) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/ibnufajar/Documents/project/KANUM/.next/server/vendor-chunks/next.js',
+  page: '/guru/kelas'
+}
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/pages/_document.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ GET /guru/kelas 500 in 1063ms
+ GET /guru/kelas 500 in 22ms
+ ○ Compiling / ...
+ ✓ Compiled / in 609ms (788 modules)
+ GET / 200 in 907ms
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(public)/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(public)/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ GET /icon.png 500 in 148ms
+ GET /icon.png 500 in 45ms
+ GET / 200 in 142ms
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(public)/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(public)/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ GET /icon.png 500 in 114ms
+ GET /icon.png 500 in 30ms
+ GET /guru/kelas 200 in 835ms
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(public)/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(public)/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ GET /icon.png 500 in 64ms
+ GET /icon.png 500 in 26ms
+ GET /guru/kelas 200 in 386ms
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(public)/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(public)/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ GET /icon.png 500 in 90ms
+ GET /icon.png 500 in 32ms
+ GET / 200 in 125ms
+ GET /guru/kelas 200 in 620ms
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(public)/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ Error: Cannot find module './5611.js'
+Require stack:
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/webpack-runtime.js
+- /Users/ibnufajar/Documents/project/KANUM/.next/server/app/(public)/page.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/require.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/load-components.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/utils.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/options.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/swc/index.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/config.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/next.js
+- /Users/ibnufajar/Documents/project/KANUM/node_modules/next/dist/server/lib/start-server.js
+    at <unknown> (.next/server/pages/_document.js:1:327)
+    at Object.<anonymous> (.next/server/pages/_document.js:1:374) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ ⨯ [TypeError: Cannot read properties of undefined (reading '/_app')]
+[TypeError: Cannot read properties of undefined (reading '/_app')]
+ GET /icon.png 500 in 116ms
+ GET /icon.png 500 in 33ms
+[?25h
+   ▲ Next.js 15.5.25
+   - Local:        http://localhost:3000
+   - Network:      http://172.20.10.2:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 2.2s
+[?25h
+   ▲ Next.js 15.5.25
+   - Local:        http://localhost:3000
+   - Network:      http://172.20.10.2:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 1837ms
+[?25h
+   ▲ Next.js 15.5.25
+   - Local:        http://localhost:3000
+   - Network:      http://172.20.10.2:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 1722ms
+[?25h
+   ▲ Next.js 15.5.25
+   - Local:        http://localhost:3000
+   - Network:      http://172.20.10.2:3000
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 2s
+[?25h

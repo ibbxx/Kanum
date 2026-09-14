@@ -5,6 +5,14 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
 import type { Budaya } from "@/lib/types";
+import { ImageValidationError } from "@/lib/image/compressImage";
+import {
+  deleteStorageObject,
+  deleteStoredImageByUrl,
+  resolveStorageRef,
+  uploadImageCompressed,
+  type StorageRef,
+} from "@/lib/image/storage";
 
 const empty = {
   id: "",
@@ -24,6 +32,10 @@ export function BudayaAdmin() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  // image_url saat form dibuka — acuan file lama yang boleh dihapus dari
+  // storage HANYA setelah DB berhasil diperbarui.
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
 
   async function load() {
     const supabase = createClient();
@@ -41,30 +53,75 @@ export function BudayaAdmin() {
       return;
     }
     const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    const rowId = form.id || crypto.randomUUID();
+
+    let imageUrl = form.image_url || null;
+    let newlyUploaded: StorageRef | null = null;
+    const oldImageRefs: StorageRef[] = [];
+    const originalRef = resolveStorageRef(originalImageUrl);
+
+    if (imageFile) {
+      // URUTAN WAJIB: kompres lokal → upload baru dulu → baru ganti referensi DB.
+      try {
+        const uploaded = await uploadImageCompressed(imageFile, {
+          bucket: "budaya-images",
+          userId: user.id,
+          entityKey: rowId,
+        });
+        imageUrl = uploaded.publicUrl;
+        newlyUploaded = { bucket: uploaded.bucket, path: uploaded.path };
+      } catch (err) {
+        if (err instanceof ImageValidationError) showToast(err.message, "error");
+        else {
+          showToast("Gambar gagal diunggah. Silakan coba lagi.", "error");
+          console.error("[BudayaAdmin] upload gambar gagal:", err);
+        }
+        return;
+      }
+    }
+    if (originalRef && (!newlyUploaded || newlyUploaded.path !== originalRef.path)) {
+      // File lama tak lagi direferensikan (diganti file baru / URL diubah).
+      oldImageRefs.push(originalRef);
+    }
+
     const payload = {
       title: form.title.trim(),
       topic_key: form.topic_key.trim(),
       category: form.category || "Umum",
       description: form.description,
-      image_url: form.image_url || null,
+      image_url: imageUrl,
       content_html: form.content_html,
       is_published: form.is_published,
       sort_order: Number(form.sort_order) || 0,
     };
     let error;
     if (form.id) ({ error } = await supabase.from("budaya").update(payload).eq("id", form.id));
-    else {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      ({ error } = await supabase.from("budaya").insert({ ...payload, created_by: user?.id }));
+    else ({ error } = await supabase.from("budaya").insert({ ...payload, id: rowId, created_by: user.id }));
+
+    if (error) {
+      // Orphan protection: upload sukses tapi DB gagal → hapus file baru.
+      if (newlyUploaded) {
+        const ok = await deleteStorageObject(newlyUploaded);
+        if (!ok) console.error("[BudayaAdmin] orphan file perlu dibersihkan manual:", newlyUploaded);
+      }
+      showToast(error.message, "error");
+      return;
     }
-    if (error) showToast(error.message, "error");
-    else {
-      showToast("Budaya disimpan");
-      setOpen(false);
-      await load();
+
+    // DB sudah berhasil → baru aman menghapus file lama (jika ada).
+    for (const ref of oldImageRefs) {
+      const ok = await deleteStorageObject(ref);
+      if (!ok) console.error("[BudayaAdmin] gambar lama gagal dihapus (perlu retry manual):", ref);
     }
+
+    showToast("Budaya disimpan");
+    setOpen(false);
+    setImageFile(null);
+    await load();
   }
 
   return (
@@ -74,6 +131,8 @@ export function BudayaAdmin() {
         className="mb-4 bg-primary text-on-primary px-4 py-2 rounded-xl font-bold inline-flex gap-1 items-center"
         onClick={() => {
           setForm(empty);
+          setImageFile(null);
+          setOriginalImageUrl(null);
           setOpen(true);
         }}
       >
@@ -114,6 +173,8 @@ export function BudayaAdmin() {
                         is_published: b.is_published,
                         sort_order: b.sort_order,
                       });
+                      setImageFile(null);
+                      setOriginalImageUrl(b.image_url || null);
                       setOpen(true);
                     }}
                   >
@@ -147,7 +208,8 @@ export function BudayaAdmin() {
             <input className="w-full px-3 py-2 border rounded-xl" placeholder="topic_key (unik)" value={form.topic_key} onChange={(e) => setForm({ ...form, topic_key: e.target.value })} />
             <input className="w-full px-3 py-2 border rounded-xl" placeholder="Kategori" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
             <textarea className="w-full px-3 py-2 border rounded-xl" placeholder="Deskripsi" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            <input className="w-full px-3 py-2 border rounded-xl" placeholder="URL gambar" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+            <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
+            <input className="w-full px-3 py-2 border rounded-xl" placeholder="URL gambar (opsional, untuk gambar eksternal)" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
             <textarea className="w-full px-3 py-2 border rounded-xl min-h-40 font-mono text-sm" placeholder="Konten HTML" value={form.content_html} onChange={(e) => setForm({ ...form, content_html: e.target.value })} />
             <input type="number" className="w-full px-3 py-2 border rounded-xl" placeholder="Urutan" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })} />
             <select className="w-full px-3 py-2 border rounded-xl" value={String(form.is_published)} onChange={(e) => setForm({ ...form, is_published: e.target.value === "true" })}>
@@ -170,8 +232,19 @@ export function BudayaAdmin() {
               type="button"
               className="bg-error text-white px-4 py-2 rounded-xl"
               onClick={async () => {
+                // DB record dulu; storage menyusul hanya jika DB sukses.
                 const supabase = createClient();
-                await supabase.from("budaya").delete().eq("id", deleteId);
+                const { error } = await supabase.from("budaya").delete().eq("id", deleteId);
+                if (error) {
+                  showToast(error.message, "error");
+                  setDeleteId(null);
+                  return;
+                }
+                const row = rows.find((b) => b.id === deleteId);
+                if (row?.image_url) {
+                  const ok = await deleteStoredImageByUrl(row.image_url);
+                  if (!ok) console.error("[BudayaAdmin] gambar budaya gagal dihapus (perlu retry manual):", row.image_url);
+                }
                 setDeleteId(null);
                 await load();
               }}

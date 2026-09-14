@@ -5,6 +5,14 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
+import { ImageValidationError } from "@/lib/image/compressImage";
+import {
+  deleteStorageObject,
+  deleteStoredImageByUrl,
+  resolveStorageRef,
+  uploadImageCompressed,
+  type StorageRef,
+} from "@/lib/image/storage";
 
 type ExerciseOpt = { id: string; title: string; is_published: boolean };
 type OptionRow = { id?: string; option_text: string; is_correct: boolean };
@@ -111,54 +119,25 @@ export function SoalAdmin({
     setOpen(true);
   }
 
-  async function uploadImage(file: File, userId: string, questionId: string) {
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    if (!["jpg", "jpeg", "png", "webp"].includes(ext)) {
-      showToast("Gunakan JPG, PNG, atau WebP.", "error");
-      return false as const;
-    }
-    // Samakan dengan file_size_limit bucket (Supabase/005_storage_setup.sql).
-    if (file.size > 5 * 1024 * 1024) {
-      showToast("Ukuran gambar maksimal 5 MB.", "error");
-      return false as const;
-    }
-    const supabase = createClient();
-    const filename = `${userId}/${questionId}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage
-      .from("question-images")
-      .upload(filename, file, {
-        upsert: true,
-        // file.type bisa kosong di sebagian browser → fallback dari ekstensi.
-        contentType: file.type || `image/${ext === "jpg" ? "jpeg" : ext}`,
-      });
-    if (error) {
-      // Konteks operasi + bucket agar mudah didiagnosis; tanpa secret.
-      showToast(
-        `Gagal upload gambar (storage:question-images): ${error.message}`,
-        "error"
-      );
-      console.error("[SoalAdmin] storage upload gagal:", {
-        bucket: "question-images",
-        path: filename,
-        message: error.message,
-      });
-      return false as const;
-    }
-    const { data } = supabase.storage.from("question-images").getPublicUrl(filename);
-    return data.publicUrl;
-  }
-
-  async function deleteStoredImage(url: string) {
+  /**
+   * Pipeline gambar soal: kompres lokal dulu, upload hasil kompresinya.
+   * Detail kompresi tidak pernah tampil di UI (implementation detail).
+   */
+  async function uploadProcessedImage(file: File, userId: string, questionId: string) {
     try {
-      const parts = new URL(url).pathname.split("/question-images/");
-      if (parts.length < 2) return;
-      const supabase = createClient();
-      const { error } = await supabase.storage
-        .from("question-images")
-        .remove([parts[1]]);
-      if (error) console.warn("[SoalAdmin] gagal hapus gambar lama:", error.message);
-    } catch (e) {
-      console.warn("[SoalAdmin] gagal hapus gambar lama:", e);
+      return await uploadImageCompressed(file, {
+        bucket: "question-images",
+        userId,
+        entityKey: questionId,
+      });
+    } catch (err) {
+      if (err instanceof ImageValidationError) {
+        showToast(err.message, "error");
+      } else {
+        showToast("Gambar gagal diunggah. Silakan coba lagi.", "error");
+        console.error("[SoalAdmin] upload gambar gagal:", err);
+      }
+      return null;
     }
   }
 
@@ -183,18 +162,21 @@ export function SoalAdmin({
     if (!user) return;
     const qId = editingId || crypto.randomUUID();
     let imageUrl = existingImage;
-    // URL gambar yang BARU diupload sesi ini — dihapus bila insert/update
-    // DB gagal agar tidak ada file orphan di storage.
-    let newlyUploaded: string | null = null;
+    // Path file BARU yang diupload sesi ini — dihapus bila insert/update DB
+    // gagal agar tidak ada file orphan di storage.
+    let newlyUploaded: StorageRef | null = null;
+    // File LAMA hanya dihapus SETELAH DB update/insert berhasil.
+    let oldImageRef: StorageRef | null = null;
     if (removeImage && imageUrl) {
-      await deleteStoredImage(imageUrl);
+      oldImageRef = resolveStorageRef(imageUrl);
       imageUrl = null;
     } else if (imageFile) {
-      if (imageUrl) await deleteStoredImage(imageUrl);
-      const uploaded = await uploadImage(imageFile, user.id, qId);
-      if (uploaded === false) return;
-      imageUrl = uploaded;
-      newlyUploaded = uploaded;
+      // URUTAN WAJIB: upload baru (terkompresi) dulu → baru ganti referensi DB.
+      const uploaded = await uploadProcessedImage(imageFile, user.id, qId);
+      if (!uploaded) return;
+      oldImageRef = resolveStorageRef(existingImage);
+      imageUrl = uploaded.publicUrl;
+      newlyUploaded = { bucket: uploaded.bucket, path: uploaded.path };
     }
 
     const payload = {
@@ -220,16 +202,37 @@ export function SoalAdmin({
         })
         .eq("id", editingId);
       if (error) {
-        if (newlyUploaded) await deleteStoredImage(newlyUploaded);
+        // Orphan protection: upload sukses tapi DB gagal → hapus file baru.
+        if (newlyUploaded) {
+          const cleanupOk = await deleteStorageObject(newlyUploaded);
+          if (!cleanupOk) {
+            console.error("[SoalAdmin] orphan file perlu dibersihkan manual:", newlyUploaded);
+          }
+        }
         showToast(error.message, "error");
         return;
       }
     } else {
       const { error } = await supabase.from("questions").insert(payload);
       if (error) {
-        if (newlyUploaded) await deleteStoredImage(newlyUploaded);
+        // Orphan protection: upload sukses tapi DB gagal → hapus file baru.
+        if (newlyUploaded) {
+          const cleanupOk = await deleteStorageObject(newlyUploaded);
+          if (!cleanupOk) {
+            console.error("[SoalAdmin] orphan file perlu dibersihkan manual:", newlyUploaded);
+          }
+        }
         showToast(error.message, "error");
         return;
+      }
+    }
+
+    // DB sudah berhasil → baru aman menghapus file lama (jika diganti/dihapus).
+    if (oldImageRef) {
+      const ok = await deleteStorageObject(oldImageRef);
+      if (!ok) {
+        // Jangan rollback DB. Catat agar bisa dibersihkan (retryable).
+        console.error("[SoalAdmin] gambar lama gagal dihapus (perlu retry manual):", oldImageRef);
       }
     }
 
@@ -402,10 +405,21 @@ export function SoalAdmin({
               type="button"
               className="bg-error text-white px-4 py-2 rounded-xl"
               onClick={async () => {
-                const q = questions.find((x) => x.id === deleteId);
-                if (q?.image_url) await deleteStoredImage(q.image_url);
+                // Hapus DB record dulu; storage menyusul hanya jika DB sukses.
                 const supabase = createClient();
-                await supabase.from("questions").delete().eq("id", deleteId);
+                const { error } = await supabase.from("questions").delete().eq("id", deleteId);
+                if (error) {
+                  showToast(error.message, "error");
+                  setDeleteId(null);
+                  return;
+                }
+                const q = questions.find((x) => x.id === deleteId);
+                if (q?.image_url) {
+                  const ok = await deleteStoredImageByUrl(q.image_url);
+                  if (!ok) {
+                    console.error("[SoalAdmin] gambar soal ybs gagal dihapus (perlu retry manual):", q.image_url);
+                  }
+                }
                 setDeleteId(null);
                 await loadQuestions(exerciseId);
               }}
