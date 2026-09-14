@@ -1,23 +1,26 @@
 import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/profile";
 import { LatihanGrid } from "./LatihanGrid";
 import type { Exercise, StudentProgress } from "@/lib/types";
 
 export default async function LatihanPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const { data: exercises } = await supabase
-    .from("exercises")
-    .select("id, title, description, category, difficulty, created_at, questions(id)")
-    .eq("is_published", true)
-    .order("created_at", { ascending: false });
+  // Kedua query independen → paralel (dulu: sequential).
+  const [exercisesRes, progressRes] = await Promise.all([
+    supabase
+      .from("exercises")
+      .select("id, title, description, category, difficulty, created_at, questions(id)")
+      .eq("is_published", true)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("student_progress")
+      .select("id, student_id, exercise_id, attempts_count, best_score, last_score, is_completed")
+      .eq("student_id", (await getProfile())?.id),
+  ]);
 
-  const { data: progress } = await supabase
-    .from("student_progress")
-    .select("id, student_id, exercise_id, attempts_count, best_score, last_score, is_completed")
-    .eq("student_id", user?.id);
+  const exercises = exercisesRes.data;
+  const progress = progressRes.data;
 
   return (
     <div>

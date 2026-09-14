@@ -6,11 +6,13 @@ import { homePathForAccess, resolveAccess } from "@/lib/auth";
  * Gate setelah Google OAuth dari halaman DAFTAR.
  * Alur: RegisterForm set cookie kanum-oauth-role → Google →
  * /auth/callback?next=/auth/oauth-role → route ini:
- *   1. RPC claim_signup_role (authority DB):
- *        'claimed'  → akun baru, role pengajuan diterapkan → /verifikasi
+ *   1. RPC claim_signup_role (authority DB) menetapkan role pengajuan
+ *      pada akun baru (masih pending sampai form disubmit):
+ *        'claimed'  → lanjut ke /daftar/lengkapi (form data pendaftaran;
+ *                     submit memanggil RPC complete_signup yang
+ *                     mengaktifkan siswa / mem-pending-kan guru)
  *        'existing' → email sudah terdaftar → JANGAN buat role/verifikasi
  *                     kedua; sign out + arahkan ke sign-in.
- *   2. AKUN BARU SELALU ke /verifikasi: role = pengajuan, bukan hak akses.
  */
 export async function GET(request: NextRequest) {
   const { origin } = new URL(request.url);
@@ -42,7 +44,8 @@ export async function GET(request: NextRequest) {
     return response;
   }
 
-  const response = NextResponse.redirect(`${origin}/verifikasi`);
+  // Akun baru masih pending → lengkapi form data pendaftaran dulu.
+  const response = NextResponse.redirect(`${origin}/daftar/lengkapi`);
   // Cookie habis setelah diterapkan.
   response.cookies.set("kanum-oauth-role", "", { maxAge: 0, path: "/" });
   return response;

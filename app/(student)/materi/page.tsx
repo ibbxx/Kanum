@@ -4,10 +4,12 @@ import type { Materi } from "@/lib/types";
 
 export default async function MateriPage() {
   const supabase = await createClient();
+  // content_html (artikel penuh) tidak dipakai grid — hanya di halaman
+  // detail. Tidak diambil di sini → payload jauh lebih ringan.
   const { data } = await supabase
     .from("materi")
     .select(
-      "id, title, chapter_number, level, description, duration_minutes, image_url, content_html, is_published, sort_order"
+      "id, title, chapter_number, level, description, duration_minutes, image_url, is_published, sort_order"
     )
     .eq("is_published", true)
     .order("sort_order");

@@ -36,10 +36,8 @@ export function homePathForAccess(
 }
 
 /**
- * Baca role + status profil user.
- * hasProfile=false → akun belum terdaftar di KANUM (belum punya profil).
- * Pemanggil menentukan kebijakan: callback login-intent menolak akses;
- * handle_new_user (trigger DB) tetap satu-satunya pembuat profil saat signup.
+ * Baca role + status profil user (tanpa membuat profil — pembuat
+ * profil satu-satunya adalah trigger handle_new_user saat pendaftaran).
  */
 export async function resolveAccess(
   supabase: {
@@ -51,7 +49,6 @@ export async function resolveAccess(
   role: UserRole;
   status: "pending" | "approved" | "rejected";
   access: AccessState;
-  hasProfile: boolean;
 }> {
   const query = supabase.from("profiles") as {
     select: (columns: string) => {
@@ -79,6 +76,5 @@ export async function resolveAccess(
     role: effectiveRole,
     status: effectiveStatus,
     access: accessStateFor(effectiveRole, effectiveStatus),
-    hasProfile: !!profile,
   };
 }

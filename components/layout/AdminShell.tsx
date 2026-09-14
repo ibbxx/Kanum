@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { subscribeToVerificationQueue } from "@/lib/verify-badge";
 import { Icon } from "@/components/Icon";
 import { LogoutButton } from "@/components/layout/LogoutButton";
 import { cn } from "@/lib/utils";
@@ -44,14 +45,16 @@ export function AdminShell({
     titles[pathname] ||
     (pathname.startsWith("/admin/soal") ? "Soal" : "Admin");
 
-  // Jumlah semua pengajuan pending (siswa + guru).
+  // Badge pengajuan pending: SATU kali fetch + realtime updates. Dulu:
+  // RPC list_verification_queue dipanggil ulang setiap pindah halaman.
   const [pendingCount, setPendingCount] = useState(0);
   useEffect(() => {
-    const supabase = createClient();
-    void supabase
-      .rpc("list_verification_queue")
-      .then(({ data }) => setPendingCount((data as unknown[] | null)?.length ?? 0));
-  }, [pathname]);
+    const { refresh, cleanup } = subscribeToVerificationQueue((count) =>
+      setPendingCount(count)
+    );
+    void refresh();
+    return cleanup;
+  }, []);
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">

@@ -1,7 +1,25 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { ToastProvider } from "@/components/Toast";
+import { IconGate } from "@/components/IconGate";
 import "./globals.css";
+
+// Font self-hosted via next/font: CSS+woff2 di-bundle lokal (dulu: <link>
+// ke fonts.googleapis.com yang render-blocking di setiap halaman).
+// Subset latin + weight yang sama seperti daftar lama.
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-plus-jakarta",
+  display: "swap",
+});
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "KANUM | Belajar Matematika Melalui Budaya",
@@ -15,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className="light">
+    <html lang="id" className={`light ${plusJakarta.variable} ${inter.variable}`}>
       <head>
         {process.env.NODE_ENV === "development" && (
           <Script
@@ -24,19 +42,18 @@ export default function RootLayout({
             strategy="beforeInteractive"
           />
         )}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        {/* Material Symbols tetap via CDN (hanya glyph icon font, kecil
+            dan di-cache panjang); teks sudah self-hosted di bawah. */}
         <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin=""
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block"
           rel="stylesheet"
         />
       </head>
       <body className="bg-background text-on-background font-body-md min-h-screen antialiased">
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <IconGate />
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

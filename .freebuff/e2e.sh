@@ -43,10 +43,12 @@ echo ""
 echo "=== D. UI MARKERS (SSR) ==="
 echo -n "admin/verifikasi memuat sidebar Verifikasi Akun: "
 curl -s -b "$CB" http://localhost:3000/admin/verifikasi | grep -c "Verifikasi Akun" | head -1
-echo -n "daftar memuat tombol Google: "
-curl -s http://localhost:3000/daftar | grep -c "Daftar dengan Google"
-echo -n "daftar memuat form email + Kata Sandi (harus >=1): "
+echo -n "daftar memuat tombol Google (harus >=1): "
+curl -s http://localhost:3000/daftar | grep -c "dengan Google"
+echo -n "daftar TANPA form kata sandi (harus 0 — auth murni Google): "
 curl -s http://localhost:3000/daftar | grep -c "Kata Sandi"
+echo -n "lengkapi(anon) redirect ke login: "
+curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" http://localhost:3000/daftar/lengkapi
 echo -n "login?error=not_registered memuat pesan banner (harus 1): "
 curl -s "http://localhost:3000/login?error=not_registered" | grep -c "Akun belum terdaftar"
 echo -n "daftar?error=already_registered memuat pesan banner (harus 1): "
@@ -88,15 +90,17 @@ curl -s "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/profiles?select=email,role,status&ord
 echo ""
 
 # ============================================================
-# F. SEED — PENGAJUAN SISWA E2E: buat akun via signup API →
-#    cek masuk antrean verifikasi → hapus bersih (admin RPC).
-#    Akun dibuang: email timestamped, tidak menyisakan data.
+# F. SEED — SIKLUS PENGAJUAN GURU E2E (meniru alur /daftar Google):
+#    signup API (identity) → profil pending (trigger)
+#    → complete_signup('Guru') → masuk antrean admin
+#    → admin approve → guru aktif → hapus bersih.
+#    Validasi bonus: complete_signup menolak akun existing (P0002).
 # ============================================================
 echo ""
-echo "=== F. SEED — PENGAJUAN SISWA (buat → antrean → hapus) ==="
+echo "=== F. SEED — SIKLUS GURU (signup → lengkapi → antrean → approve → hapus) ==="
 SEED_EMAIL="e2e-seed-$(date +%s)@example.com"
 SEED_PASS="e2e-seed-Passw0rd"
-SEED_PAYLOAD=$(printf '{"email":"%s","password":"%s","data":{"full_name":"E2E Seed Siswa","role":"student","class_name":"E2E-X"}}' "$SEED_EMAIL" "$SEED_PASS")
+SEED_PAYLOAD=$(printf '{"email":"%s","password":"%s","data":{"full_name":"E2E Seed Guru","role":"teacher"}}' "$SEED_EMAIL" "$SEED_PASS")
 SEED_RESP=$(curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/auth/v1/signup" \
   -H "$AH1" -H "Content-Type: application/json" -d "$SEED_PAYLOAD")
 SEED_ID=$(printf '%s' "$SEED_RESP" | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const j=JSON.parse(d);process.stdout.write(j.id||'')}catch(e){}})")
@@ -111,19 +115,47 @@ else
       echo "  Perbaiki salah satu di Supabase Dashboard:"
       echo "  1) Authentication -> Sign In/Providers -> matikan 'Confirm email', ATAU"
       echo "  2) Authentication -> SMTP -> pasang SMTP yang berfungsi."
-      echo "  Sampai diperbaiki, pendaftaran email+sandi di /daftar GAGAL untuk user baru."
+      echo "  Catatan: alur utama /daftar kini murni Google (tanpa SMTP); seed ini"
+      echo "  hanya memakai signup API sebagai pengganti identitas Google."
       ;;
   esac
 fi
 
 if [ -n "$SEED_ID" ]; then
-  echo "-- Profil seed (harus pending / student / kelas E2E-X):"
-  curl -s "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/profiles?id=eq.$SEED_ID&select=email,role,status,class_name" -H "$AH1" -H "$AHA"
+  echo "-- Profil seed (harus pending / student — trigger pendaftaran):"
+  curl -s "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/profiles?id=eq.$SEED_ID&select=email,role,status" -H "$AH1" -H "$AHA"
   echo ""
-  echo "-- Antrean verifikasi memuat seed (QUEUE_HIT harus 1):"
+
+  # Login sbg seed utk memanggil complete_signup (pemanggil = auth.uid()).
+  SEED_TOK=$(curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/auth/v1/token?grant_type=password" \
+    -H "apikey: $NEXT_PUBLIC_SUPABASE_ANON_KEY" -H "Content-Type: application/json" \
+    -d "{\"email\":\"$SEED_EMAIL\",\"password\":\"$SEED_PASS\"}" \
+    | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{process.stdout.write(JSON.parse(d).access_token)}catch(e){}})")
+  SEED_AH="apikey: $NEXT_PUBLIC_SUPABASE_ANON_KEY"
+  SEED_AUTH="Authorization: Bearer $SEED_TOK"
+
+  echo "-- complete_signup sbg GURU (harus return \"pending\") :"
+  curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/rpc/complete_signup" \
+    -H "$SEED_AH" -H "$SEED_AUTH" -H "Content-Type: application/json" \
+    -d '{"p_full_name":"E2E Seed Guru","p_class_name":null}'
+  echo ""
+  echo "-- Profil seed setelah lengkapi (harus pending / teacher):"
+  curl -s "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/profiles?id=eq.$SEED_ID&select=role,status,full_name" -H "$AH1" -H "$AHA"
+  echo ""
+  echo "-- Antrean admin memuat seed (QUEUE_HIT harus 1):"
   QUEUE_HIT=$(curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/rpc/list_verification_queue" \
     -H "$AH1" -H "$AHA" -H "Content-Type: application/json" -d '{}' | grep -c "$SEED_ID")
   echo "QUEUE_HIT:$QUEUE_HIT"
+  echo "-- Admin approve guru seed (harus \"approved\") :"
+  curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/rpc/set_verification_status" \
+    -H "$AH1" -H "$AHA" -H "Content-Type: application/json" \
+    -d "{\"p_user_id\":\"$SEED_ID\",\"p_status\":\"approved\"}"
+  echo ""
+  echo "-- Guru seed menyetujui sesama guru (harus 42501 — hanya admin):"
+  curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/rpc/set_verification_status" \
+    -H "$SEED_AH" -H "$SEED_AUTH" -H "Content-Type: application/json" \
+    -d "{\"p_user_id\":\"$MYID\",\"p_status\":\"approved\"}" -w " [%{http_code}]"
+  echo ""
 fi
 
 echo "-- Cleanup hapus akun seed (admin_delete_account):"

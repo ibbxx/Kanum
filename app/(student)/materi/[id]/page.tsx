@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/Icon";
+import { SmartImage } from "@/components/SmartImage";
 import { levelBadge } from "@/lib/utils";
 import type { Materi } from "@/lib/types";
 
@@ -27,11 +28,13 @@ export default async function MateriDetailPage({
       <Link href="/materi" className="text-sm text-primary font-semibold inline-flex items-center gap-1 mb-6">
         <Icon name="arrow_back" className="text-[18px]" /> Kembali
       </Link>
-      <div className="rounded-3xl overflow-hidden mb-6 h-56 bg-primary-container">
-        <img
+      <div className="rounded-3xl overflow-hidden mb-6 h-56 relative bg-primary-container">
+        <SmartImage
           src={m.image_url || "/Asset/Images/gambarmateri.png"}
           alt={m.title}
-          className="w-full h-full object-cover"
+          priority
+          className="object-cover"
+          sizes="(min-width: 768px) 768px, 100vw"
         />
       </div>
       <div className="flex gap-2 mb-3">

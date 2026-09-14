@@ -27,15 +27,19 @@ export async function GET(request: Request) {
         role: "student" as const,
         status: "pending" as const,
         access: "pending" as const,
-        hasProfile: false,
       };
 
   // NIAT SIGN-IN (callback tanpa next=/auth/oauth-role):
-  // email belum terdaftar → JANGAN ubah sign-in menjadi sign-up.
-  // resolveAccess sengaja TIDAK membuat profil via ensure_own_profile
-  // untuk kasus ini; tanpa profil = belum terdaftar.
+  // Supabase selalu membuat auth.users untuk identitas Google baru —
+  // tak bisa dicegah dari app. Deteksinya: profil pending & baru tercipta
+  // (≤3 menit, trigger memberi pending hanya pada guru) → identitas
+  // BELUM TERDAFTAR sebagai akun KANUM; jangan biarkan sign-in menjadi
+  // sign-up: buang sesi, minta daftar.
+  // Profil approved = terdaftar sah (siswa langsung approved saat daftar).
   const isLoginIntent = next !== "/auth/oauth-role";
-  if (isLoginIntent && user && !access.hasProfile) {
+  const created = user?.created_at ? new Date(user.created_at).getTime() : 0;
+  const isFresh = created > 0 && Date.now() - created < 3 * 60 * 1000;
+  if (isLoginIntent && user && access.status === "pending" && isFresh) {
     await supabase.auth.signOut();
     return NextResponse.redirect(`${origin}/login?error=not_registered`);
   }

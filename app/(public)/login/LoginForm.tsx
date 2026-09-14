@@ -208,9 +208,8 @@ function LoginFormInner() {
           )}
 
           <p className="text-center text-xs text-outline mt-6 leading-relaxed">
-            Belum punya akun? Daftar di halaman <Link href="/daftar" className="underline">Daftar</Link> —
-            via Google maupun email &amp; kata sandi. Setiap pengajuan diverifikasi
-            pihak sekolah sebelum aktif.
+            Belum punya akun? Daftar di halaman <Link href="/daftar" className="underline">Daftar</Link> menggunakan
+            akun Google — Siswa langsung aktif, Guru diverifikasi Admin.
           </p>
         </div>
       </main>

@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { SmartImage } from "@/components/SmartImage";
 import type { Budaya } from "@/lib/types";
 
 export default async function BudayaPage() {
   const supabase = await createClient();
+  // content_html (artikel penuh) tidak dipakai grid — hanya di detail.
   const { data } = await supabase
     .from("budaya")
-    .select("id, title, topic_key, category, description, image_url, content_html, is_published, sort_order")
+    .select("id, title, topic_key, category, description, image_url, is_published, sort_order")
     .eq("is_published", true)
     .order("sort_order");
 
@@ -28,11 +30,12 @@ export default async function BudayaPage() {
               href={`/budaya/${b.id}`}
               className="bg-white rounded-2xl overflow-hidden border border-outline-variant hover:shadow-lg"
             >
-              <div className="h-44">
-                <img
+              <div className="h-44 relative">
+                <SmartImage
                   src={b.image_url || "/Asset/Images/sejarahammatoa.png"}
                   alt={b.title}
-                  className="w-full h-full object-cover"
+                  className="object-cover"
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                 />
               </div>
               <div className="p-5">

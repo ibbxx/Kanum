@@ -8,10 +8,10 @@ import { ResubmitButton, StatusPoller } from "./VerifikasiActions";
 export const dynamic = "force-dynamic";
 
 /**
- * Halaman status verifikasi akun.
- *   pending  → menunggu guru (siswa) / admin (guru) menyetujui
- *   rejected → pengajuan ditolak + tombol ajukan ulang (RPC resubmit_verification)
- *   approved → diarahkan ke home sesuai role
+ * Halaman status verifikasi akun (khusus Guru — siswa langsung aktif).
+ *   pending  → "Pengajuan akun Guru sedang menunggu verifikasi Admin."
+ *   rejected → "Pengajuan akun Guru ditolak." + ajukan ulang (resubmit)
+ *   approved → diarahkan ke /guru
  */
 export default async function VerifikasiPage() {
   const profile = await getProfile();
@@ -31,6 +31,7 @@ export default async function VerifikasiPage() {
     redirect(profile.role === "admin" ? "/admin" : profile.role === "teacher" ? "/guru" : "/dashboard");
   }
 
+  // Verifikasi hanya untuk guru; siswa tidak pernah berstatus pending.
   const isTeacherPending = profile.role === "teacher";
 
   return (
@@ -57,18 +58,18 @@ export default async function VerifikasiPage() {
                 <Icon name="hourglass_top" className="text-[32px]" />
               </div>
               <h2 className="font-display text-2xl font-extrabold mb-2 tracking-tight">
-                Menunggu Verifikasi
+                Menunggu Verifikasi Admin
               </h2>
               <p className="text-on-surface-variant text-sm leading-relaxed">
                 {isTeacherPending ? (
                   <>
-                    Pengajuan akun <strong>Guru</strong> Anda sedang diperiksa oleh{" "}
+                    Pengajuan akun <strong>Guru</strong> sedang menunggu verifikasi{" "}
                     <strong>Admin</strong>. Anda akan mendapat akses setelah disetujui.
                   </>
                 ) : (
                   <>
-                    Pengajuan akun <strong>Siswa</strong> Anda sedang diperiksa oleh{" "}
-                    <strong>Guru</strong>. Anda akan mendapat akses setelah disetujui.
+                    Pengajuan akun <strong>Guru</strong> ditolak. Jika Anda merasa ini
+                    keliru, ajukan ulang — pihak sekolah akan memeriksa kembali.
                   </>
                 )}
               </p>
@@ -94,7 +95,7 @@ export default async function VerifikasiPage() {
                 Pengajuan Ditolak
               </h2>
               <p className="text-on-surface-variant text-sm leading-relaxed">
-                Pengajuan akun Anda belum disetujui. Jika Anda merasa ini keliru,
+                Pengajuan akun Guru Anda ditolak. Jika Anda merasa ini keliru,
                 ajukan ulang — pihak sekolah akan memeriksa kembali.
               </p>
               <ResubmitButton />

@@ -4,14 +4,16 @@
 -- Idempotent — aman dijalankan berulang di Supabase SQL Editor.
 --
 -- Prinsip:
---   role   = jenis akun yang DIAJUKAN (student/teacher/admin)
+--   role   = jenis akun (student/teacher/admin)
 --   status = hasil verifikasi (pending/approved/rejected)
---   Akses hanya untuk status 'approved'. Admin selalu aktif.
---   Verifikasi siswa → guru   |   Verifikasi guru → admin.
---   Admin tidak bisa didaftarkan publik.
+--   SISWA  → langsung 'approved' saat pendaftaran (tanpa verifikasi).
+--   GURU   → 'pending' sampai diverifikasi Admin (satu-satunya jalur
+--            approval guru; guru tidak bisa mengangkat guru).
+--   ADMIN  → tidak bisa didaftarkan publik; dibuat via SQL Editor.
+--   Akses area hanya untuk status 'approved' (admin selalu aktif).
 --
 -- KEAMANAN: client TIDAK bisa mengubah kolom role/status (column
--- privilege, bagian 4). Perubahan role/status hanya lewat RPC
+-- privilege, bagian 3). Perubahan role/status hanya lewat RPC
 -- SECURITY DEFINER yang memeriksa kewenangan di database.
 -- ============================================================
 
@@ -33,9 +35,12 @@ CREATE INDEX IF NOT EXISTS idx_profiles_status ON public.profiles(status);
 
 -- ============================================================
 -- 2. TRIGGER PENDAFTARAN (revisi)
---    - SEMUA pendaftaran publik baru → status 'pending'
---    - Metadata role='admin' TIDAK dipercaya (siapa pun bisa set
---      metadata saat signup) → dipetakan 'student'
+--    SEMUA akun publik baru → 'pending' dulu. Aktivasi final terjadi
+--    saat user SUBMIT form pendaftaran (RPC complete_signup, bagian 4c):
+--      student → approved (siswa tanpa verifikasi)
+--      teacher → pending  (menunggu verifikasi Admin)
+--    Metadata role='admin' TIDAK dipercaya (siapa pun bisa set
+--    metadata saat signup) → dipetakan 'student'.
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
@@ -64,7 +69,7 @@ BEGIN
     COALESCE(NEW.email, ''),
     COALESCE(NEW.raw_user_meta_data->>'class_name', ''),
     v_db_role,
-    'pending',
+    'pending', -- finalisasi status oleh complete_signup (form pendaftaran)
     COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture')
   )
   ON CONFLICT (id) DO UPDATE SET
@@ -150,12 +155,16 @@ GRANT UPDATE (full_name, class_name, avatar_url) ON TABLE public.profiles TO aut
 
 -- ============================================================
 -- 4. RPC: KLAIM ROLE SAAT OAUTH (status-aware)
---    Akun baru (≤10 menit, masih pending) boleh mengubah role yang
---    DIAJUKAN. Status TIDAK berubah — tetap pending sampai diverifikasi.
+--    Dipanggil /auth/oauth-role setelah Google OAuth dari /daftar.
+--    Supabase selalu membuat auth.users untuk identitas Google baru →
+--    profil baru (trigger) selalu student+pending. Klaim hanya
+--    menetapkan role PENGAJUAN; status tetap 'pending' sampai user
+--    submit form pendaftaran (complete_signup, 4c).
 --    Return:
---      'claimed'  → role pengajuan diterapkan pada akun baru
+--      'claimed'  → role pengajuan diterapkan pada akun baru → lanjut
+--                   ke form lengkapi data (/daftar/lengkapi)
 --      'existing' → email sudah terdaftar sebelumnya; TIDAK ada role/
---                   verification request kedua yang dibuat/diubah.
+--                   verification kedua yang dibuat/diubah.
 --                   Satu email = satu akun = satu role (kebijakan KANUM).
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.claim_signup_role(p_role TEXT)
@@ -191,6 +200,63 @@ $$;
 GRANT EXECUTE ON FUNCTION public.claim_signup_role(TEXT) TO authenticated;
 
 -- ============================================================
+-- 4c. RPC: FINALISASI FORM PENDAFTARAN (complete_signup)
+--     Form pendaftaran HANYA pengumpul data — bukan autentikasi
+--     email/password, tanpa SMTP. Authentication sudah selesai via
+--     Google OAuth; klaim role sudah lewat (/auth/oauth-role).
+--     Validasi di sisi DB:
+--       - hanya akun baru (≤10 menit) yang masih student+pending
+--       - nama wajib; kelas hanya relevan untuk siswa
+--     Aktivasi (authority DB):
+--       student → approved  (siswa langsung aktif → /dashboard)
+--       teacher → tetap pending (menunggu verifikasi Admin → /verifikasi)
+--     Return: status final ('approved' | 'pending').
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.complete_signup(
+  p_full_name TEXT,
+  p_class_name TEXT DEFAULT NULL
+)
+RETURNS TEXT
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_role TEXT;
+  v_status TEXT;
+BEGIN
+  IF p_full_name IS NULL OR length(btrim(p_full_name)) < 3 THEN
+    RAISE EXCEPTION 'Nama lengkap wajib diisi (minimal 3 karakter)'
+      USING ERRCODE = '22023';
+  END IF;
+
+  UPDATE public.profiles
+  SET full_name = btrim(p_full_name),
+      class_name = COALESCE(NULLIF(btrim(COALESCE(p_class_name, '')), ''), class_name)
+  WHERE id = auth.uid()
+    AND role IN ('student', 'teacher')
+    AND status = 'pending'
+    AND created_at > now() - INTERVAL '10 minutes'
+  RETURNING role INTO v_role;
+
+  IF v_role IS NULL THEN
+    RAISE EXCEPTION 'Pendaftaran tidak dapat diproses: akun sudah aktif, sudah diproses, atau sesi kedaluwarsa. Silakan masuk.'
+      USING ERRCODE = 'P0002';
+  END IF;
+
+  IF v_role = 'student' THEN
+    UPDATE public.profiles SET status = 'approved' WHERE id = auth.uid();
+    v_status := 'approved';
+  ELSE
+    v_status := 'pending'; -- guru menunggu verifikasi Admin
+  END IF;
+
+  RETURN v_status;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.complete_signup(TEXT, TEXT) TO authenticated;
+
+-- ============================================================
 -- 4b. SATELIT ANTI-DUPLIKAT: satu email = satu profil.
 --     Sumber kebenaran utama tetap auth.users.email (unique bawaan
 --     Supabase). Index ini lapisan kedua di level profiles.
@@ -209,9 +275,10 @@ END $$;
 -- ============================================================
 -- 5. RPC VERIFIKASI — GERBANG TUNGGAL BEROTORITAS DI DATABASE
 -- ============================================================
--- 5a. Antrean pengajuan yang boleh dilihat pemanggil:
---       admin   → semua pengajuan pending (siswa + guru)
---       teacher → pengajuan pending siswa
+-- 5a. Antrean pengajuan yang boleh dilihat pemanggil.
+--     Siswa TIDAK melalui verifikasi → hanya guru yang pending di sini.
+--       admin   → semua pengajuan pending guru
+--       teacher → tidak ada (approval guru hanya oleh Admin)
 CREATE OR REPLACE FUNCTION public.list_verification_queue()
 RETURNS TABLE (
   id UUID,
@@ -230,18 +297,15 @@ AS $$
          p.avatar_url, p.created_at
   FROM public.profiles p
   WHERE p.status = 'pending'
-    AND (
-      public.is_admin()
-      OR (public.is_teacher() AND p.role = 'student')
-    )
+    AND p.role = 'teacher'
+    AND public.is_admin()
   ORDER BY p.created_at ASC;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.list_verification_queue() TO authenticated;
 
--- 5b. Setujui / tolak pengajuan.
---     Siswa → disetujui GURU (atau admin)
---     Guru  → HANYA admin (guru tidak bisa mengangkat guru lain)
+-- 5b. Setujui / tolak pengajuan GURU.
+--     HANYA admin (guru tidak bisa mengangkat guru lain).
 --     Menyetujui/menolak diri sendiri → selalu ditolak.
 CREATE OR REPLACE FUNCTION public.set_verification_status(
   p_user_id UUID,
@@ -271,12 +335,13 @@ BEGIN
     RAISE EXCEPTION 'Pengajuan sudah diproses' USING ERRCODE = 'P0002';
   END IF;
 
-  IF public.is_admin() THEN
-    NULL; -- admin: semua pengajuan
-  ELSIF public.is_teacher() AND v_target.role = 'student' THEN
-    NULL; -- guru: hanya pengajuan siswa
-  ELSE
-    RAISE EXCEPTION 'Tidak berwenang memverifikasi akun ini' USING ERRCODE = '42501';
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Hanya Admin yang berwenang memverifikasi pengajuan guru'
+      USING ERRCODE = '42501';
+  END IF;
+  IF v_target.role <> 'teacher' THEN
+    RAISE EXCEPTION 'Hanya pengajuan guru yang melalui verifikasi'
+      USING ERRCODE = '22023';
   END IF;
 
   UPDATE public.profiles
@@ -369,7 +434,8 @@ END $$;
 -- 7. CATATAN MIGRASI
 -- ------------------------------------------------------------
 -- Akun lama: otomatis 'approved' (default kolom) — akses tak berubah.
--- Akun baru: otomatis 'pending'.
+-- Akun baru siswa: langsung 'approved'. Akun baru guru: 'pending'.
+-- Pending guru lama yang sudah approval guru sebelumnya tetap berlaku.
 -- Buat/setujui admin baru dari SQL Editor:
 --   UPDATE public.profiles SET role = 'admin', status = 'approved'
 --   WHERE email = 'email-admin@domain.com';

@@ -145,7 +145,15 @@ export function QuizPlayer({ exerciseId }: { exerciseId: string }) {
         <div className="bg-white border border-outline-variant rounded-2xl p-6">
           <p className="font-semibold text-lg mb-4">{q.question}</p>
           {q.image_url ? (
-            <img src={q.image_url} alt="" className="w-full rounded-xl mb-4 max-h-64 object-contain" />
+            /* Plain img: gambar soal tidak punya container berukuran
+               tetap (tinggi alami), fill-mode next/image butuh parent
+               berukuran. lazy = tetap tidak menghalangi interaksi. */
+            <img
+              src={q.image_url}
+              alt=""
+              loading="lazy"
+              className="w-full rounded-xl mb-4 max-h-64 object-contain"
+            />
           ) : null}
           <div className="space-y-3">
             {q.question_options.map((opt, i) => {

@@ -44,14 +44,28 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Identitas user: coba getClaims() dulu — verifikasi JWT LOKAL via
+  // JWKS ter-cache (tanpa roundtrip jaringan). Bila tidak bisa (token
+  // kadaluarsa perlu refresh, atau project masih pakai kunci simetris),
+  // fallback getUser() — perilaku lama, termasuk auto-refresh session.
+  let userId: string | null = null;
+  try {
+    const { data: claimsData } = await supabase.auth.getClaims();
+    userId = (claimsData?.claims.sub as string | undefined) ?? null;
+  } catch {
+    userId = null;
+  }
+  if (!userId) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    userId = user?.id ?? null;
+  }
 
   const { pathname } = request.nextUrl;
 
   // Anonim: path publik & auth tidak butuh role/status → selesai di sini.
-  if (!user) {
+  if (!userId) {
     return supabaseResponse;
   }
 
@@ -74,7 +88,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/laporan") ||
     pathname.startsWith("/pengaturan");
 
-  const { role, access } = await resolveAccess(supabase, user.id);
+  const { role, access } = await resolveAccess(supabase, userId);
 
   // Login/daftar tidak relevan bagi user yang sudah masuk —
   // arahkan langsung ke halaman rumah sesuai aksesnya.

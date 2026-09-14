@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
+import { SmartImage } from "@/components/SmartImage";
 import { levelBadge } from "@/lib/utils";
 import type { Materi } from "@/lib/types";
 
@@ -61,10 +62,11 @@ export function MateriGrid({ items }: { items: Materi[] }) {
               className="bg-surface rounded-2xl overflow-hidden border border-outline-variant flex flex-col"
             >
               <div className="h-44 relative bg-primary-container">
-                <img
+                <SmartImage
                   src={m.image_url || "/Asset/Images/gambarmateri.png"}
                   alt={m.title}
-                  className="w-full h-full object-cover opacity-85"
+                  className="object-cover opacity-85"
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                 />
                 <span className="absolute top-3 left-3 bg-surface/90 text-primary text-xs font-bold px-2.5 py-1 rounded-full">
                   {m.chapter_number > 0 ? `Bab ${m.chapter_number}` : "Materi"}

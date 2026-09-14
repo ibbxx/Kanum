@@ -2,21 +2,30 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/profile";
 import { Icon } from "@/components/Icon";
+import { SmartImage } from "@/components/SmartImage";
 import type { StudentProgress } from "@/lib/types";
 
 export default async function DashboardPage() {
+  // getProfile() di-cache per request (layout sudah memanggilnya) — user id
+  // diambil dari sini, bukan roundtrip auth.getUser() kedua.
   const profile = await getProfile();
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const { data: progresses } = await supabase
-    .from("student_progress")
-    .select("is_completed, best_score, attempts_count")
-    .eq("student_id", user?.id);
+  // Kedua query independen → paralel (dulu: sequential).
+  const [progressesRes, budayaRes] = await Promise.all([
+    supabase
+      .from("student_progress")
+      .select("is_completed, best_score, attempts_count")
+      .eq("student_id", profile?.id),
+    supabase
+      .from("budaya")
+      .select("id, title, category, description, image_url")
+      .eq("is_published", true)
+      .order("sort_order")
+      .limit(3),
+  ]);
 
-  const list = (progresses || []) as StudentProgress[];
+  const list = (progressesRes.data || []) as StudentProgress[];
   const completed = list.filter((p) => p.is_completed).length;
   const attempted = list.length;
   const avgScore =
@@ -26,12 +35,7 @@ export default async function DashboardPage() {
   const pct =
     attempted > 0 ? Math.min(Math.round((completed / Math.max(attempted, 1)) * 100), 100) : 0;
 
-  const { data: budaya } = await supabase
-    .from("budaya")
-    .select("id, title, category, description, image_url")
-    .eq("is_published", true)
-    .order("sort_order")
-    .limit(3);
+  const budaya = budayaRes.data;
 
   return (
     <div>
@@ -129,10 +133,11 @@ export default async function DashboardPage() {
             {(budaya || []).map((b) => (
               <Link key={b.id} href={`/budaya/${b.id}`} className="group">
                 <div className="relative h-48 rounded-2xl overflow-hidden mb-3">
-                  <img
+                  <SmartImage
                     src={b.image_url || "/Asset/Images/sejarahammatoa.png"}
                     alt={b.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    className="object-cover group-hover:scale-105 transition-transform"
+                    sizes="(min-width: 768px) 33vw, 100vw"
                   />
                   <div className="absolute bottom-3 left-3 bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded text-[10px] font-bold uppercase">
                     {b.category}

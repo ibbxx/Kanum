@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/Icon";
 import { LogoutButton } from "@/components/layout/LogoutButton";
 import { cn } from "@/lib/utils";
@@ -11,7 +9,6 @@ import type { Profile } from "@/lib/types";
 
 const nav = [
   { href: "/guru", icon: "dashboard", label: "Dashboard Guru" },
-  { href: "/guru/verifikasi", icon: "how_to_reg", label: "Verifikasi Siswa" },
   { href: "/guru/kelas", icon: "groups", label: "Kelas Saya" },
   { href: "/guru/latihan", icon: "edit_square", label: "Latihan" },
   { href: "/guru/soal", icon: "quiz", label: "Soal" },
@@ -44,15 +41,7 @@ export function GuruShell({
     titles[pathname] ||
     (pathname.startsWith("/guru/soal") ? "Soal" : "Panel Guru");
 
-  // Jumlah pengajuan siswa pending (badge nav). RPC membatasi ke yang
-  // berwenang — guru hanya menghitung pengajuan siswa.
-  const [pendingCount, setPendingCount] = useState(0);
-  useEffect(() => {
-    const supabase = createClient();
-    void supabase
-      .rpc("list_verification_queue")
-      .then(({ data }) => setPendingCount((data as unknown[] | null)?.length ?? 0));
-  }, [pathname]);
+  // Siswa tidak melalui verifikasi — tidak ada badge antrean di panel guru.
 
   return (
     <div className="min-h-screen bg-surface text-on-surface">
@@ -85,11 +74,6 @@ export function GuruShell({
                 >
                   <Icon name={item.icon} />
                   <span className="flex-1">{item.label}</span>
-                  {item.href === "/guru/verifikasi" && pendingCount > 0 && (
-                    <span className="min-w-5 h-5 px-1.5 rounded-full bg-error text-white text-[11px] font-bold flex items-center justify-center">
-                      {pendingCount}
-                    </span>
-                  )}
                 </Link>
               );
             })}

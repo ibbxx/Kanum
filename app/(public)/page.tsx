@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
+import { SmartImage } from "@/components/SmartImage";
 
 export default function LandingPage() {
   return (
@@ -70,10 +71,12 @@ export default function LandingPage() {
               <div className="absolute inset-0 bg-primary-container/5 rounded-[40px] rotate-3" />
               <div className="absolute inset-0 bg-surface rounded-[40px] border border-outline-variant shadow-sm flex items-center justify-center p-8">
                 <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-                  <img
+                  <SmartImage
                     src="/Asset/Images/Kaintope.png"
                     alt="Kain Tope"
-                    className="w-full h-full object-cover"
+                    priority
+                    className="object-cover"
+                    sizes="(min-width: 768px) 50vw, 100vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/40 to-transparent" />
                   <div className="absolute bottom-6 left-6 right-6 p-4 bg-white/90 backdrop-blur-md rounded-xl">
@@ -113,11 +116,14 @@ export default function LandingPage() {
         <section className="py-24 bg-surface-container-low px-gutter" id="budaya">
           <div className="max-w-container-max mx-auto flex flex-col md:flex-row gap-16 items-center">
             <div className="w-full md:w-1/2">
-              <img
-                src="/Asset/Images/Kaintenunmotifputih.png"
-                alt="Tope Le'Leng"
-                className="w-full aspect-[4/3] object-cover rounded-2xl shadow-lg"
-              />
+              <div className="relative aspect-[4/3] rounded-2xl shadow-lg overflow-hidden">
+                <SmartImage
+                  src="/Asset/Images/Kaintenunmotifputih.png"
+                  alt="Tope Le'Leng"
+                  className="object-cover"
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                />
+              </div>
             </div>
             <div className="w-full md:w-1/2">
               <h2 className="font-display-lg text-headline-md md:text-display-lg text-primary mb-6">

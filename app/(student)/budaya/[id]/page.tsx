@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/Icon";
+import { SmartImage } from "@/components/SmartImage";
 import type { Budaya } from "@/lib/types";
 
 export default async function BudayaDetailPage({
@@ -31,11 +32,13 @@ export default async function BudayaDetailPage({
       <Link href="/budaya" className="text-sm text-primary font-semibold inline-flex items-center gap-1 mb-6">
         <Icon name="arrow_back" className="text-[18px]" /> Kembali
       </Link>
-      <div className="rounded-3xl overflow-hidden mb-6 h-56">
-        <img
+      <div className="rounded-3xl overflow-hidden mb-6 h-56 relative">
+        <SmartImage
           src={b.image_url || "/Asset/Images/sejarahammatoa.png"}
           alt={b.title}
-          className="w-full h-full object-cover"
+          priority
+          className="object-cover"
+          sizes="(min-width: 768px) 768px, 100vw"
         />
       </div>
       <p className="text-xs font-bold uppercase text-secondary mb-2">{b.category}</p>

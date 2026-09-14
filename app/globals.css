@@ -7,6 +7,13 @@
   vertical-align: middle;
 }
 
+/* Glyph ligature belum siap → sembunyikan agar kode ligature tidak
+   flash sebagai teks; begitu font siap (kelas html.icons-ready dari
+   IconGate) glyph tampil serentak. Tanpa JS pun tak menghalangi konten. */
+html:not(.icons-ready) .material-symbols-outlined {
+  visibility: hidden;
+}
+
 .ammatoa-pattern {
   mask-image: radial-gradient(circle at 2px 2px, black 1px, transparent 0);
   mask-size: 16px 16px;
@@ -66,7 +73,7 @@
 .prose-kanum h2,
 .prose-kanum h3,
 .prose-kanum h4 {
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
   color: #003527;
   font-weight: 700;
   margin: 1rem 0 0.5rem;

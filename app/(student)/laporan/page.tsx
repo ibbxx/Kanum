@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/profile";
 import { formatDateId } from "@/lib/utils";
 
 type ProgressRow = {
@@ -21,28 +22,32 @@ type AttemptRow = {
 
 export default async function LaporanPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getProfile() di-cache per request (layout sudah memanggil) → id dari
+  // sana, bukan roundtrip auth.getUser() tambahan.
+  const profile = await getProfile();
 
-  const { data: prog } = await supabase
-    .from("student_progress")
-    .select("exercise_id, best_score, is_completed, attempts_count, exercises(title)")
-    .eq("student_id", user?.id);
+  // Kedua query independen → paralel (dulu: sequential).
+  const [progRes, attemptsRes] = await Promise.all([
+    supabase
+      .from("student_progress")
+      .select("exercise_id, best_score, is_completed, attempts_count, exercises(title)")
+      .eq("student_id", profile?.id),
+    supabase
+      .from("exercise_attempts")
+      .select("id, score, correct_count, wrong_count, started_at, finished_at, exercises(title)")
+      .eq("student_id", profile?.id)
+      .order("started_at", { ascending: false })
+      .limit(20),
+  ]);
 
-  const list = (prog || []) as unknown as ProgressRow[];
+  const list = (progRes.data || []) as unknown as ProgressRow[];
   const completed = list.filter((p) => p.is_completed).length;
   const avg =
     list.length > 0
       ? Math.round(list.reduce((s, p) => s + Number(p.best_score), 0) / list.length)
       : 0;
 
-  const { data: attempts } = await supabase
-    .from("exercise_attempts")
-    .select("id, score, correct_count, wrong_count, started_at, finished_at, exercises(title)")
-    .eq("student_id", user?.id)
-    .order("started_at", { ascending: false })
-    .limit(20);
+  const attempts = attemptsRes.data;
 
   const rows = (attempts || []) as unknown as AttemptRow[];
 

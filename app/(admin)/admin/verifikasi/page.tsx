@@ -6,8 +6,8 @@ export default function VerifikasiAdminPage() {
   return (
     <div>
       <p className="text-sm text-on-surface-variant mb-4">
-        Semua pengajuan akun yang menunggu verifikasi: siswa (bisa juga
-        diverifikasi guru pengampu) dan guru (hanya Admin yang berwenang).
+        Pengajuan akun Guru yang menunggu verifikasi Anda. Siswa langsung
+        aktif tanpa verifikasi; hanya Admin yang berwenang menyetujui guru.
       </p>
       <VerifikasiPanel />
     </div>
