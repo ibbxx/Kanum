@@ -1,11 +1,18 @@
 export type UserRole = "admin" | "teacher" | "student";
 
+/** Status verifikasi akun (profiles.status). */
+export type AccountStatus = "pending" | "approved" | "rejected";
+
+/** Keadaan akses efektif: admin selalu aktif, role lain ikut status. */
+export type AccessState = "approved" | "pending" | "rejected";
+
 export type Profile = {
   id: string;
   full_name: string;
   email: string;
   class_name: string;
   role: UserRole;
+  status: AccountStatus;
   avatar_url: string | null;
 };
 

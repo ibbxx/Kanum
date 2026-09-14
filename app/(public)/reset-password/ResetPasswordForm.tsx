@@ -5,7 +5,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
-import { homePathForRole, resolveUserRole } from "@/lib/auth";
+import { homePathForAccess, resolveAccess } from "@/lib/auth";
 
 export function ResetPasswordForm() {
   const { showToast } = useToast();
@@ -35,9 +35,11 @@ export function ResetPasswordForm() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const role = user ? await resolveUserRole(supabase, user.id) : "student";
+    const access = user
+      ? await resolveAccess(supabase, user.id)
+      : { role: "student" as const, status: "pending" as const, access: "pending" as const };
     showToast("Kata sandi berhasil diubah", "success");
-    window.location.assign(homePathForRole(role));
+    window.location.assign(homePathForAccess(access.access, access.role));
   }
 
   return (

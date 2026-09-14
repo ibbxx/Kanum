@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { homePathForRole, resolveUserRole } from "@/lib/auth";
+import { homePathForAccess, resolveAccess } from "@/lib/auth";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -21,12 +21,18 @@ export async function GET(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const role = user ? await resolveUserRole(supabase, user.id) : "student";
+  const access = user
+    ? await resolveAccess(supabase, user.id)
+    : { role: "student" as const, status: "pending" as const, access: "pending" as const };
+
   const dest =
-    next &&
-    (next.startsWith("/admin") || next.startsWith("/dashboard") || next === "/auth/oauth-role")
+    next && next === "/auth/oauth-role"
       ? next
-      : homePathForRole(role);
+      : next &&
+          (next.startsWith("/admin") || next.startsWith("/dashboard")) &&
+          access.access === "approved"
+        ? next
+        : homePathForAccess(access.access, access.role);
 
   return NextResponse.redirect(`${origin}${dest}`);
 }

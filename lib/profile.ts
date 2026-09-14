@@ -10,7 +10,7 @@ export async function getProfile(): Promise<Profile | null> {
 
   const { data } = await supabase
     .from("profiles")
-    .select("id, full_name, email, class_name, role, avatar_url")
+    .select("id, full_name, email, class_name, role, status, avatar_url")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -29,6 +29,7 @@ export async function getProfile(): Promise<Profile | null> {
     email: user.email || "",
     class_name: "",
     role: "student",
+    status: "pending",
     avatar_url: (user.user_metadata?.avatar_url as string | undefined) || null,
   };
 }

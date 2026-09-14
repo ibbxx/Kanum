@@ -10,6 +10,7 @@ type Akun = {
   full_name: string;
   email: string;
   role: UserRole;
+  status: string;
   class_name: string;
   created_at: string;
 };
@@ -30,7 +31,7 @@ export function KelolaAkun() {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, full_name, email, role, class_name, created_at")
+      .select("id, full_name, email, role, status, class_name, created_at")
       .order("created_at", { ascending: false });
     if (error) {
       showToast("Gagal memuat akun: " + error.message, "error");
@@ -47,7 +48,12 @@ export function KelolaAkun() {
     if (!pending) return;
     const { akun, role } = pending;
     const supabase = createClient();
-    const { error } = await supabase.from("profiles").update({ role }).eq("id", akun.id);
+    // RPC admin_set_role: satu-satunya jalur ubah role (client tidak punya
+    // privilege UPDATE kolom role/status). Role dari admin = approved.
+    const { error } = await supabase.rpc("admin_set_role", {
+      p_user_id: akun.id,
+      p_role: role,
+    });
     if (error) {
       showToast("Gagal mengubah role: " + error.message, "error");
       return;
@@ -112,6 +118,16 @@ export function KelolaAkun() {
                     >
                       {ROLE_LABEL[a.role] ?? a.role}
                     </span>
+                    {a.status === "pending" && (
+                      <span className="ml-1.5 inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-secondary-container text-on-secondary-container">
+                        Menunggu
+                      </span>
+                    )}
+                    {a.status === "rejected" && (
+                      <span className="ml-1.5 inline-block px-2 py-0.5 rounded-full text-[11px] font-bold bg-error-container text-on-error-container">
+                        Ditolak
+                      </span>
+                    )}
                   </td>
                   <td>
                     <select

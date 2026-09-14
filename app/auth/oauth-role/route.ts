@@ -1,13 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { homePathForAccess, resolveAccess } from "@/lib/auth";
 
 /**
  * Gate setelah Google OAuth dari halaman DAFTAR.
  * Alur: RegisterForm set cookie kanum-oauth-role → Google →
  * /auth/callback?next=/auth/oauth-role → route ini:
- *   1. RPC claim_signup_role: set role HANYA untuk akun baru (≤10 menit,
- *      masih 'student') — anti-eskalasi, akun lama tak berubah.
- *   2. Redirect ke home sesuai role efektif.
+ *   1. RPC claim_signup_role: set role yang DIAJUKAN hanya untuk akun baru
+ *      (≤10 menit, masih pending) — anti-eskalasi, akun lama tak berubah.
+ *   2. AKUN BARU SELALU ke /verifikasi: role = pengajuan, bukan hak akses.
+ *      Menunggu guru (siswa) / admin (guru) menyetujui.
  */
 export async function GET(request: NextRequest) {
   const { origin } = new URL(request.url);
@@ -24,14 +26,10 @@ export async function GET(request: NextRequest) {
   const desiredRole =
     request.cookies.get("kanum-oauth-role")?.value === "teacher" ? "teacher" : "student";
 
-  const { data: effectiveRole } = await supabase.rpc("claim_signup_role", {
-    p_role: desiredRole,
-  });
+  // Hanya berpengaruh untuk akun baru (pending, ≤10 menit) — lihat migrasi 002.
+  await supabase.rpc("claim_signup_role", { p_role: desiredRole });
 
-  const dest =
-    effectiveRole === "admin" ? "/admin" : effectiveRole === "teacher" ? "/guru" : "/dashboard";
-
-  const response = NextResponse.redirect(`${origin}${dest}`);
+  const response = NextResponse.redirect(`${origin}/verifikasi`);
   // Cookie habis setelah diterapkan.
   response.cookies.set("kanum-oauth-role", "", { maxAge: 0, path: "/" });
   return response;

@@ -6,7 +6,8 @@ Jalankan berurutan di **Supabase → SQL Editor**. Semua file idempotent
 | Urutan | File | Isi |
 |--------|------|-----|
 | 1 | [`000_rebuild.sql`](./000_rebuild.sql) | Schema dasar: tabel (profiles, exercises, questions, attempts, materi, budaya), trigger profil otomatis, RLS, RPC quiz |
-| 2 | [`001_multi_role.sql`](./001_multi_role.sql) | Sistem tiga peran (siswa/guru/admin): role `teacher`, tabel kelas & anggota, RLS per pemilik, anti-eskalasi role |
+| 2 | [`001_multi_role.sql`](./001_multi_role.sql) | Sistem tiga peran (siswa/guru/admin): role `teacher`, tabel kelas & anggota, RLS per pemilik |
+| 3 | [`002_verification_flow.sql`](./002_verification_flow.sql) | Verifikasi akun: status `pending/approved/rejected`, akun baru pending, verifikasi siswa oleh guru & guru oleh admin (RPC berotoritas), anti-eskalasi via column privilege |
 
 Cara menjalankan:
 1. Buka [supabase.com/dashboard](https://supabase.com/dashboard) → project KANUM.

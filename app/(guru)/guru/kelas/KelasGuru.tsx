@@ -87,12 +87,14 @@ export function KelasGuru() {
     }
     setLoading(true);
     const supabase = createClient();
-    // Cari siswa by email (hanya akun student — RLS admin-all tidak dipakai di sini).
+    // Cari siswa by email — hanya akun student yang SUDAH disetujui.
+    // RLS "Guru lihat profil siswa" mengizinkan guru melihat profil siswa.
     const { data: profil, error: errCari } = await supabase
       .from("profiles")
       .select("id, role, full_name")
       .eq("email", emailSiswa.trim().toLowerCase())
       .eq("role", "student")
+      .eq("status", "approved")
       .maybeSingle();
 
     if (errCari || !profil) {
@@ -218,8 +220,8 @@ export function KelasGuru() {
             {activeKelas ? `Anggota Kelas ${activeKelas.name}` : "Anggota Kelas"}
           </h3>
           <p className="text-xs text-on-surface-variant mb-3">
-            Tambah siswa dengan email yang terdaftar. Siswa harus sudah mendaftar
-            sebagai siswa.
+            Tambah siswa dengan email yang terdaftar. Siswa harus sudah
+            mendaftar DAN sudah disetujui verifikasi.
           </p>
           <div className="flex gap-2">
             <input

@@ -13,5 +13,7 @@ export default async function GuruLayout({
   if (!profile) redirect("/login");
   // Guru dan admin (admin boleh melihat panel guru).
   if (profile.role !== "teacher" && profile.role !== "admin") redirect("/dashboard");
+  // Pengajuan guru yang belum disetujui admin belum boleh masuk.
+  if (profile.role === "teacher" && profile.status !== "approved") redirect("/verifikasi");
   return <GuruShell profile={profile}>{children}</GuruShell>;
 }

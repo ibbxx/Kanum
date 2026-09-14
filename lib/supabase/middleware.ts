@@ -1,14 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { homePathForRole, resolveUserRole } from "@/lib/auth";
+import { homePathForAccess, resolveAccess } from "@/lib/auth";
 
 const publicExact = new Set([
   "/",
   "/login",
   "/daftar",
-  "/cek-email",
-  "/lupa-password",
-  "/reset-password",
+  "/verifikasi",
   "/privacy",
   "/terms",
 ]);
@@ -77,11 +75,30 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  const role = await resolveUserRole(supabase, user.id);
+  const { role, access } = await resolveAccess(supabase, user.id);
 
+  // Login/daftar tidak relevan bagi user yang sudah masuk.
   if (pathname === "/login" || pathname === "/daftar") {
     const url = request.nextUrl.clone();
-    url.pathname = homePathForRole(role);
+    url.pathname = homePathForAccess(access, role);
+    const redirect = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((c) => {
+      redirect.cookies.set(c.name, c.value);
+    });
+    return redirect;
+  }
+
+  // Akun pending/rejected hanya boleh di halaman publik, /verifikasi,
+  // dan /auth/* — tidak ada akses dashboard/guru/admin apa pun.
+  if (
+    access !== "approved" &&
+    pathname !== "/verifikasi" &&
+    !isPublicPath(pathname) &&
+    !pathname.startsWith("/auth/") &&
+    (isAdminPath || isTeacherPath || isStudentPath)
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/verifikasi";
     const redirect = NextResponse.redirect(url);
     supabaseResponse.cookies.getAll().forEach((c) => {
       redirect.cookies.set(c.name, c.value);
@@ -92,7 +109,7 @@ export async function updateSession(request: NextRequest) {
   // /admin hanya admin sungguhan (guru masuk lewat /guru).
   if (isAdminPath && role !== "admin") {
     const url = request.nextUrl.clone();
-    url.pathname = homePathForRole(role);
+    url.pathname = homePathForAccess(access, role);
     const redirect = NextResponse.redirect(url);
     supabaseResponse.cookies.getAll().forEach((c) => {
       redirect.cookies.set(c.name, c.value);
@@ -103,7 +120,7 @@ export async function updateSession(request: NextRequest) {
   // /guru untuk teacher; admin juga boleh (kelola semua).
   if (isTeacherPath && role !== "teacher" && role !== "admin") {
     const url = request.nextUrl.clone();
-    url.pathname = homePathForRole(role);
+    url.pathname = homePathForAccess(access, role);
     const redirect = NextResponse.redirect(url);
     supabaseResponse.cookies.getAll().forEach((c) => {
       redirect.cookies.set(c.name, c.value);
@@ -113,7 +130,7 @@ export async function updateSession(request: NextRequest) {
 
   if (isStudentPath && role !== "student") {
     const url = request.nextUrl.clone();
-    url.pathname = homePathForRole(role);
+    url.pathname = homePathForAccess(access, role);
     const redirect = NextResponse.redirect(url);
     supabaseResponse.cookies.getAll().forEach((c) => {
       redirect.cookies.set(c.name, c.value);

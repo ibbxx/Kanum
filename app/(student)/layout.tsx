@@ -12,5 +12,8 @@ export default async function StudentLayout({
   const profile = await getProfile();
   if (!profile) redirect("/login");
   if (profile.role === "admin") redirect("/admin");
+  // Akun belum disetujui (pending/rejected) belum punya akses dashboard.
+  if (profile.status === "pending") redirect("/verifikasi");
+  if (profile.status === "rejected") redirect("/verifikasi");
   return <StudentShell profile={profile}>{children}</StudentShell>;
 }

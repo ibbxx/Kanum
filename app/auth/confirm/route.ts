@@ -1,13 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-import { homePathForRole, resolveUserRole } from "@/lib/auth";
+import { homePathForAccess, resolveAccess } from "@/lib/auth";
 
 /**
  * Supabase email verification (token-hash flow).
  * Link dari email konfirmasi mendarat di sini:
  *   /auth/confirm?token_hash=...&type=signup&next=/dashboard
- * Menukar token menjadi session cookie, lalu mengarahkan sesuai role.
+ * Menukar token menjadi session cookie, lalu mengarahkan sesuai
+ * akses efektif (pending/rejected → /verifikasi).
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -33,11 +34,16 @@ export async function GET(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const role = user ? await resolveUserRole(supabase, user.id) : "student";
+  const access = user
+    ? await resolveAccess(supabase, user.id)
+    : { role: "student" as const, status: "pending" as const, access: "pending" as const };
+
   const dest =
-    next && (next.startsWith("/dashboard") || next.startsWith("/admin"))
+    next &&
+    access.access === "approved" &&
+    (next.startsWith("/dashboard") || next.startsWith("/admin"))
       ? next
-      : homePathForRole(role);
+      : homePathForAccess(access.access, access.role);
 
   return NextResponse.redirect(`${origin}${dest}`);
 }

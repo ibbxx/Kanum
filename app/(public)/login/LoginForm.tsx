@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
 import { AuthBrandPanel } from "@/components/layout/AuthBrandPanel";
-import { homePathForRole, resolveUserRole } from "@/lib/auth";
+import { homePathForAccess, resolveAccess } from "@/lib/auth";
 
 const ERROR_MESSAGES: Record<string, string> = {
   oauth: "Gagal masuk dengan Google. Coba lagi.",
@@ -55,8 +55,8 @@ function LoginFormInner() {
       showToast("Gagal masuk: " + (error?.message || "akun tidak ditemukan"), "error");
       return;
     }
-    const role = await resolveUserRole(supabase, data.user.id);
-    window.location.assign(homePathForRole(role));
+    const access = await resolveAccess(supabase, data.user.id);
+    window.location.assign(homePathForAccess(access.access, access.role));
   }
 
   async function googleLogin() {
@@ -104,7 +104,7 @@ function LoginFormInner() {
               <Icon name="error" className="text-[18px] mt-0.5 shrink-0" />
               <span>{bannerMessage}</span>
             </div>
- )}
+          )}
           <p className="text-on-surface-variant text-sm mb-8">
             Selamat datang kembali ke akun KANUM Anda.
           </p>

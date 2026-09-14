@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
 import { AuthBrandPanel } from "@/components/layout/AuthBrandPanel";
-import { homePathForRole, resolveUserRole } from "@/lib/auth";
 
 const ERROR_MESSAGES: Record<string, string> = {
   oauth: "Gagal mendaftar dengan Google. Coba lagi.",
@@ -16,95 +15,20 @@ const ERROR_MESSAGES: Record<string, string> = {
 function RegisterFormInner() {
   const { showToast } = useToast();
   const searchParams = useSearchParams();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [role, setRole] = useState<"siswa" | "guru">("siswa");
-  const [terms, setTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showPass, setShowPass] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
 
   const errorCode = searchParams.get("error");
   const bannerMessage = errorCode
     ? ERROR_MESSAGES[errorCode] ?? "Terjadi kesalahan. Coba lagi."
     : null;
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name || !email || !password) {
-      showToast("Lengkapi semua kolom", "error");
-      return;
-    }
-    if (password.length < 6) {
-      showToast("Kata sandi minimal 6 karakter", "error");
-      return;
-    }
-    if (password !== confirm) {
-      showToast("Kata sandi tidak cocok", "error");
-      return;
-    }
-    if (!terms) {
-      showToast("Setujui syarat & ketentuan terlebih dahulu", "error");
-      return;
-    }
+  async function googleSignup() {
     setLoading(true);
     const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
-        data: {
-          full_name: name,
-          role, // "siswa" | "guru" — trigger DB memetakan guru → 'teacher'
-        },
-      },
-    });
-    if (error) {
-      setLoading(false);
-      const msg = error.message.toLowerCase();
-      const isRateLimited =
-        error.code === "over_email_send_rate_limit" ||
-        msg.includes("rate limit");
-      if (isRateLimited) {
-        // 429: akun tetap terbentuk — hanya email verifikasinya yang tertunda.
-        // Arahkan ke /cek-email supaya user bisa kirim ulang lewat tombol resend.
-        showToast(
-          "Akun dibuat, tapi email verifikasi tertunda. Kirim ulang di halaman berikutnya.",
-          "error"
-        );
-        window.location.assign(`/cek-email?email=${encodeURIComponent(email)}`);
-        return;
-      }
-      if (
-        error.code === "unexpected_failure" ||
-        msg.includes("error sending confirmation email")
-      ) {
-        // 500 dari Supabase: pengiriman email verifikasi gagal di sisi SMTP.
-        // Akun BELUM terbentuk — jangan arahkan ke /cek-email (resend tak akan temukan akun).
-        showToast(
-          "Server email sedang bermasalah. Pendaftaran gagal — coba lagi beberapa saat.",
-          "error"
-        );
-        return;
-      }
-      showToast("Gagal daftar: " + error.message, "error");
-      return;
-    }
-    if (data.session && data.user) {
-      const dbRole = await resolveUserRole(supabase, data.user.id);
-      window.location.assign(homePathForRole(dbRole));
-      return;
-    }
-    setLoading(false);
-    window.location.assign(`/cek-email?email=${encodeURIComponent(email)}`);
-  }
-
-  async function googleSignup() {
-    const supabase = createClient();
-    // Simpan pilihan role — diterapkan oleh /auth/oauth-role setelah OAuth kembali.
+    // Simpan pilihan pengajuan — diterapkan oleh /auth/oauth-role setelah
+    // OAuth kembali. Pilihan = PENGAJUAN, bukan hak akses: akun baru selalu
+    // berstatus pending sampai diverifikasi (guru utk siswa, admin utk guru).
     document.cookie = `kanum-oauth-role=${
       role === "guru" ? "teacher" : "student"
     }; path=/; max-age=1800; samesite=lax`;
@@ -114,7 +38,10 @@ function RegisterFormInner() {
         redirectTo: `${window.location.origin}/auth/callback?next=/auth/oauth-role`,
       },
     });
-    if (error) showToast("Gagal: " + error.message, "error");
+    if (error) {
+      setLoading(false);
+      showToast("Gagal: " + error.message, "error");
+    }
   }
 
   return (
@@ -153,172 +80,63 @@ function RegisterFormInner() {
             </div>
           )}
           <p className="text-on-surface-variant text-sm mb-8">
-            Buat akun KANUM baru dan mulai belajar.
+            Daftar menggunakan akun Google, lalu pengajuan Anda diverifikasi
+            oleh pihak sekolah sebelum akun aktif.
           </p>
-          <form onSubmit={onSubmit} className="space-y-5">
-            <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
-                Nama Lengkap
-              </label>
-              <div className="relative">
-                <Icon
-                  name="person"
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px]"
-                />
-                <input
-                  className="w-full pl-11 pr-3 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Nama Anda"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
-                Email
-              </label>
-              <div className="relative">
-                <Icon
-                  name="mail"
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px]"
-                />
-                <input
-                  className="w-full pl-11 pr-3 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@email.com"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
-                Kata Sandi
-              </label>
-              <div className="relative">
-                <Icon
-                  name="lock"
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px]"
-                />
-                <input
-                  className="w-full pl-11 pr-11 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
-                  type={showPass ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minimal 6 karakter"
-                  required
-                />
-                <button
-                  type="button"
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-outline"
-                  onClick={() => setShowPass((v) => !v)}
-                >
-                  <Icon name={showPass ? "visibility_off" : "visibility"} />
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
-                Ulangi Kata Sandi
-              </label>
-              <div className="relative">
-                <Icon
-                  name="lock_reset"
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[19px]"
-                />
-                <input
-                  className="w-full pl-11 pr-11 py-3 bg-surface-container-low border border-outline-variant/50 rounded-xl"
-                  type={showConfirm ? "text" : "password"}
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-outline"
-                  onClick={() => setShowConfirm((v) => !v)}
-                >
-                  <Icon name={showConfirm ? "visibility_off" : "visibility"} />
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
-                Daftar Sebagai
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRole("siswa")}
-                  className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-semibold text-sm transition-colors ${
-                    role === "siswa"
-                      ? "bg-primary text-on-primary border-primary"
-                      : "bg-surface-container-low border-outline-variant/50 text-on-surface-variant hover:border-outline"
-                  }`}
-                >
-                  <Icon name="school" className="text-[18px]" />
-                  Siswa
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole("guru")}
-                  className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-semibold text-sm transition-colors ${
-                    role === "guru"
-                      ? "bg-primary text-on-primary border-primary"
-                      : "bg-surface-container-low border-outline-variant/50 text-on-surface-variant hover:border-outline"
-                  }`}
-                >
-                  <Icon name="history_edu" className="text-[18px]" />
-                  Guru
-                </button>
-              </div>
-              <p className="text-xs text-on-surface-variant mt-2">
-                {role === "siswa"
-                  ? "Siswa masuk ke dashboard belajar & latihan."
-                  : "Guru mendapat panel pengelolaan kelas & konten sendiri."}
-              </p>
-            </div>
-            <label className="flex items-start gap-2.5 text-sm text-on-surface-variant">
-              <input
-                type="checkbox"
-                checked={terms}
-                onChange={(e) => setTerms(e.target.checked)}
-                className="mt-0.5 accent-primary"
-              />
-              <span>
-                Saya setuju dengan{" "}
-                <Link href="/terms" className="text-primary underline">
-                  Syarat & Ketentuan
-                </Link>{" "}
-                dan{" "}
-                <Link href="/privacy" className="text-primary underline">
-                  Kebijakan Privasi
-                </Link>
-                .
-              </span>
+
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-1.5">
+              Daftar Sebagai
             </label>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-primary text-on-primary font-bold py-3.5 rounded-xl"
-            >
-              {loading ? "Memproses..." : "Daftar Sekarang"}
-            </button>
-          </form>
-          <div className="relative my-6 flex items-center">
-            <div className="flex-grow h-px bg-outline-variant/40" />
-            <span className="px-3 text-outline text-[11px]">ATAU</span>
-            <div className="flex-grow h-px bg-outline-variant/40" />
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setRole("siswa")}
+                className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-semibold text-sm transition-colors ${
+                  role === "siswa"
+                    ? "bg-primary text-on-primary border-primary"
+                    : "bg-surface-container-low border-outline-variant/50 text-on-surface-variant hover:border-outline"
+                }`}
+              >
+                <Icon name="school" className="text-[18px]" />
+                Siswa
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("guru")}
+                className={`flex items-center justify-center gap-2 py-3 rounded-xl border font-semibold text-sm transition-colors ${
+                  role === "guru"
+                    ? "bg-primary text-on-primary border-primary"
+                    : "bg-surface-container-low border-outline-variant/50 text-on-surface-variant hover:border-outline"
+                }`}
+              >
+                <Icon name="history_edu" className="text-[18px]" />
+                Guru
+              </button>
+            </div>
+            <p className="text-xs text-on-surface-variant mt-2 flex items-start gap-1.5">
+              <Icon name="info" className="text-[14px] mt-0.5 shrink-0" />
+              {role === "siswa"
+                ? "Pengajuan siswa diverifikasi oleh Guru sebelum dashboard belajar terbuka."
+                : "Pengajuan guru diverifikasi oleh Admin sebelum panel guru terbuka."}
+            </p>
           </div>
+
           <button
             type="button"
-            onClick={googleSignup}
-            className="w-full border border-outline-variant py-3 rounded-xl font-semibold"
+            onClick={() => void googleSignup()}
+            disabled={loading}
+            className="w-full mt-6 border border-outline-variant py-3 rounded-xl font-semibold inline-flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors"
           >
-            Daftar dengan Google
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+            </svg>
+            {loading ? "Mengalihkan ke Google..." : "Daftar dengan Google"}
           </button>
+
           <p className="text-center text-sm mt-6 text-on-surface-variant">
             Sudah punya akun?{" "}
             <Link href="/login" className="text-primary font-bold">
