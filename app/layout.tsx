@@ -47,7 +47,11 @@ export default function RootLayout({
           />
         )}
         {/* Material Symbols tetap via CDN (hanya glyph icon font, kecil
-            dan di-cache panjang); teks sudah self-hosted di bawah. */}
+            dan di-cache panjang); teks sudah self-hosted di bawah.
+            Preconnect memangkas DNS+TCP+TLS (~250–500 ms di jaringan lambat)
+            dari pemuatan CSS + woff2 ikon yang render-blocking. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block"
           rel="stylesheet"

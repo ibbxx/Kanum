@@ -38,8 +38,13 @@ export function ResubmitButton() {
   );
 }
 
-/** Muat ulang data server tiap 15 detik agar status terbaru tampil sendiri. */
-export function StatusPoller({ intervalMs = 15000 }: { intervalMs?: number }) {
+/**
+ * Muat ulang data server agar status terbaru tampil sendiri saat halaman
+ * ditinggalkan terbuka. Interval cukup longgar (2 menit): perubahan status
+ * tetap muncul tanpa router.refresh() tiap 15 detik — refresh memicu
+ * render ulang server + query Supabase dan mengganggu navigasi berikutnya.
+ */
+export function StatusPoller({ intervalMs = 120000 }: { intervalMs?: number }) {
   const router = useRouter();
   useEffect(() => {
     const id = setInterval(() => router.refresh(), intervalMs);

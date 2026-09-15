@@ -1,13 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
-import { getProfile } from "@/lib/profile";
+import { getProfile, getUserIdFromCookies } from "@/lib/profile";
 import { formatDateId } from "@/lib/utils";
 
 type ProgressRow = {
-  exercise_id: string;
   best_score: number;
   is_completed: boolean;
-  attempts_count: number;
-  exercises: { title: string } | null;
 };
 
 type AttemptRow = {
@@ -22,20 +19,22 @@ type AttemptRow = {
 
 export default async function LaporanPage() {
   const supabase = await createClient();
-  // getProfile() di-cache per request (layout sudah memanggil) → id dari
-  // sana, bukan roundtrip auth.getUser() tambahan.
-  const profile = await getProfile();
+  // Id dari cookie sesi (tanpa roundtrip jaringan; layout sudah memvalidasi
+  // sesi & role via getProfile()). Kedua query tetap dijaga RLS.
+  // Fallback getProfile() (di-cache per request) bila cookie tak terbaca —
+  // jalur data identik dengan perilaku lama di semua kondisi.
+  const studentId = (await getUserIdFromCookies()) ?? (await getProfile())?.id ?? "";
 
   // Kedua query independen → paralel (dulu: sequential).
   const [progRes, attemptsRes] = await Promise.all([
     supabase
       .from("student_progress")
-      .select("exercise_id, best_score, is_completed, attempts_count, exercises(title)")
-      .eq("student_id", profile?.id),
+      .select("best_score, is_completed")
+      .eq("student_id", studentId),
     supabase
       .from("exercise_attempts")
       .select("id, score, correct_count, wrong_count, started_at, finished_at, exercises(title)")
-      .eq("student_id", profile?.id)
+      .eq("student_id", studentId)
       .order("started_at", { ascending: false })
       .limit(20),
   ]);
