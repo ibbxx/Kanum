@@ -27,9 +27,37 @@ const empty = {
   is_published: false,
 };
 
+// Nama tampilan level — konsisten dengan halaman materi siswa.
+const LEVEL_LABEL: Record<Materi["level"], string> = {
+  dasar: "Dasar",
+  menengah: "Menengah",
+  lanjut: "Lanjut",
+};
+
+// Filter daftar materi di sisi klien (referensi behavior: legacy
+// filterMateri — search judul, level, status publikasi). Tanpa query
+// tambahan ke Supabase; sumber data tetap satu kali fetch saat load().
+function filterMateri(
+  rows: Materi[],
+  q: string,
+  level: string,
+  status: "" | "true" | "false"
+): Materi[] {
+  const query = q.trim().toLowerCase();
+  return rows.filter((m) => {
+    const matchQ = !query || m.title.toLowerCase().includes(query);
+    const matchL = !level || m.level === level;
+    const matchS = status === "" || String(m.is_published) === status;
+    return matchQ && matchL && matchS;
+  });
+}
+
 export function MateriAdmin() {
   const { showToast } = useToast();
   const [rows, setRows] = useState<Materi[]>([]);
+  const [query, setQuery] = useState("");
+  const [levelFilter, setLevelFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"" | "true" | "false">("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -137,9 +165,37 @@ export function MateriAdmin() {
           setOriginalImageUrl(null);
           setOpen(true);
         }}
+        data-testid="add-materi"
       >
         <Icon name="add" /> Tambah Materi
       </button>
+      <div className="mb-3 flex flex-wrap gap-2">
+        <input
+          className="px-3 py-2 border border-outline-variant rounded-xl bg-white text-sm max-w-64"
+          placeholder="Cari materi..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <select
+          className="px-3 py-2 border border-outline-variant rounded-xl bg-white text-sm"
+          value={levelFilter}
+          onChange={(e) => setLevelFilter(e.target.value)}
+        >
+          <option value="">Semua Level</option>
+          <option value="dasar">Dasar</option>
+          <option value="menengah">Menengah</option>
+          <option value="lanjut">Lanjut</option>
+        </select>
+        <select
+          className="px-3 py-2 border border-outline-variant rounded-xl bg-white text-sm"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as "" | "true" | "false")}
+        >
+          <option value="">Semua Status</option>
+          <option value="true">Dipublikasikan</option>
+          <option value="false">Draft</option>
+        </select>
+      </div>
       <div className="bg-white border border-outline-variant rounded-2xl overflow-x-auto">
         <table className="admin-table">
           <thead>
@@ -153,13 +209,18 @@ export function MateriAdmin() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((m) => (
+            {filterMateri(rows, query, levelFilter, statusFilter).map((m) => (
               <tr key={m.id}>
                 <td className="text-center font-bold">{m.chapter_number || "–"}</td>
                 <td>
                   <strong>{m.title}</strong>
+                  {m.description ? (
+                    <span className="block text-xs text-on-surface-variant">
+                      {m.description.length > 60 ? m.description.slice(0, 60) + "..." : m.description}
+                    </span>
+                  ) : null}
                 </td>
-                <td>{m.level}</td>
+                <td>{LEVEL_LABEL[m.level] ?? m.level}</td>
                 <td>{m.duration_minutes} min</td>
                 <td>{m.is_published ? "Publik" : "Draft"}</td>
                 <td className="flex gap-2">
@@ -202,6 +263,13 @@ export function MateriAdmin() {
                 </td>
               </tr>
             ))}
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center py-8 text-on-surface-variant">
+                  Belum ada materi. Klik "Tambah Materi" untuk membuat.
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>
@@ -238,7 +306,9 @@ export function MateriAdmin() {
       {deleteId ? (
         <div className="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center">
           <div className="bg-white p-6 rounded-2xl">
-            <p className="mb-4">Hapus materi?</p>
+            <p className="mb-4">
+              Hapus materi <strong>{rows.find((m) => m.id === deleteId)?.title}</strong>?
+            </p>
             <button type="button" className="mr-2" onClick={() => setDeleteId(null)}>Batal</button>
             <button
               type="button"

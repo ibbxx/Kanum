@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/profile";
 import { LogoutButton } from "@/components/layout/LogoutButton";
 import { Icon } from "@/components/Icon";
-import { ResubmitButton, StatusPoller } from "./VerifikasiActions";
+import { ResubmitButton, StatusPoller, CompleteSignupLink } from "./VerifikasiActions";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +33,9 @@ export default async function VerifikasiPage() {
 
   // Verifikasi hanya untuk guru; siswa tidak pernah berstatus pending.
   const isTeacherPending = profile.role === "teacher";
+  // Siswa pending lama (tersangkut sebelum fix alur) → recovery path,
+  // bukan pesan "ditolak" yang menyesatkan.
+  const isStudentPending = profile.role === "student";
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-12 bg-surface-container-lowest">
@@ -66,6 +69,11 @@ export default async function VerifikasiPage() {
                     Pengajuan akun <strong>Guru</strong> sedang menunggu verifikasi{" "}
                     <strong>Admin</strong>. Anda akan mendapat akses setelah disetujui.
                   </>
+                ) : isStudentPending ? (
+                  <>
+                    Pendaftaran akun Anda belum selesai. Silakan lengkapi data
+                    untuk mengaktifkan akun Siswa Anda.
+                  </>
                 ) : (
                   <>
                     Pengajuan akun <strong>Guru</strong> ditolak. Jika Anda merasa ini
@@ -73,6 +81,7 @@ export default async function VerifikasiPage() {
                   </>
                 )}
               </p>
+              {isStudentPending && <CompleteSignupLink />}
               <div className="mt-6 px-4 py-3 rounded-xl bg-surface-container-low text-left">
                 <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
                   Akun

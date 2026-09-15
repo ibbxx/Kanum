@@ -27,29 +27,37 @@ export function MateriGrid({ items }: { items: Materi[] }) {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row gap-4 mb-8">
-        <input
-          className="flex-1 px-4 py-2 rounded-full bg-surface-container-low"
-          placeholder="Cari materi..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
+      {/* Filter Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-2 bg-surface-container-low border border-outline-variant rounded-full px-4 py-2">
+          <Icon name="search" className="text-outline text-base" />
+          <input
+            type="text"
+            placeholder="Cari materi..."
+            className="bg-transparent border-none focus:outline-none focus:ring-0 text-sm w-36 md:w-48 text-on-surface"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
         <div className="flex gap-2 flex-wrap">
           {["semua", "dasar", "menengah", "lanjut"].map((l) => (
             <button
               key={l}
               type="button"
               onClick={() => setLevel(l)}
-              className={`px-4 py-2 rounded-full text-sm font-bold ${level === l
-                  ? "bg-primary text-on-primary"
-                  : "bg-surface-container border border-outline-variant"
-                }`}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold capitalize transition-colors ${
+                level === l
+                  ? "bg-primary text-on-primary shadow-sm"
+                  : "bg-surface-container border border-outline-variant text-on-surface-variant hover:bg-surface-container-high"
+              }`}
             >
-              {l}
+              {l === "semua" ? "Semua" : l}
             </button>
           ))}
         </div>
       </div>
+
+      <h2 className="font-display text-xl font-bold text-primary mb-5">Semua Bab</h2>
 
       {filtered.length === 0 ? (
         <p className="text-center py-12 text-on-surface-variant">Belum ada materi dipublikasikan.</p>
@@ -58,9 +66,9 @@ export function MateriGrid({ items }: { items: Materi[] }) {
           {filtered.map((m) => (
             <article
               key={m.id}
-              className="bg-surface rounded-2xl overflow-hidden border border-outline-variant flex flex-col"
+              className="group bg-surface rounded-2xl overflow-hidden border border-outline-variant flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
             >
-              <div className="h-44 relative bg-primary-container">
+              <div className="h-44 relative bg-primary-container overflow-hidden">
                 <SmartImage
                   src={m.image_url || "/Asset/Images/gambarmateri.png"}
                   alt={m.title}

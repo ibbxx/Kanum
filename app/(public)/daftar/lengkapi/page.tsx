@@ -5,9 +5,10 @@ import { CompleteSignupForm } from "./CompleteSignupForm";
 export const dynamic = "force-dynamic";
 
 /**
- * Form lengkapi pendaftaran — HANYA untuk akun baru hasil Google OAuth
- * dari /daftar yang belum submit form (masih pending, ≤10 menit).
- * Selain itu: approved → home, pending lama → /verifikasi, anonim → /login.
+ * Form lengkapi pendaftaran — untuk akun hasil Google OAuth dari /daftar
+ * yang belum submit form (masih pending). Siswa boleh kapan pun (fix alur
+ * tersangkut); guru hanya ≤10 menit, setelah itu diarahkan ke /verifikasi.
+ * Selain itu: approved → home, lainnya → /verifikasi, anonim → /login.
  */
 export default async function LengkapiPage() {
   const supabase = await createClient();
@@ -25,12 +26,15 @@ export default async function LengkapiPage() {
   if (!profile) redirect("/login");
 
   const created = new Date(profile.created_at as string).getTime();
-  const freshPending =
-    profile.status === "pending" && Date.now() - created < 10 * 60 * 1000;
+  const stalePending = Date.now() - created >= 10 * 60 * 1000;
 
-  if (!freshPending) {
-    redirect(profile.status === "approved" ? "/dashboard" : "/verifikasi");
-  }
+  if (profile.status === "approved") redirect("/dashboard");
+  if (profile.status !== "pending") redirect("/verifikasi");
+  // Siswa pending lama tetap boleh melengkapi pendaftaran — RPC
+  // complete_signup mengaktifkan siswa tanpa batas usia akun (fix alur
+  // tersangkut). Guru tetap dibatasi jendela 10 menit: pending guru adalah
+  // status verifikasi yang sah, diproses Admin via antrean.
+  if (profile.role !== "student" && stalePending) redirect("/verifikasi");
 
   // Prefill nama dari identitas Google (metadata) bila tersedia.
   const meta = user.user_metadata as Record<string, string | undefined>;

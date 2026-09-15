@@ -26,9 +26,29 @@ const empty = {
   sort_order: 0,
 };
 
+// Filter daftar budaya di sisi klien (referensi behavior: legacy
+// filterBudaya — search judul/topic_key + status publikasi).
+function filterBudaya(
+  rows: Budaya[],
+  q: string,
+  status: "" | "true" | "false"
+): Budaya[] {
+  const query = q.trim().toLowerCase();
+  return rows.filter((b) => {
+    const matchQ =
+      !query ||
+      b.title.toLowerCase().includes(query) ||
+      (b.topic_key || "").toLowerCase().includes(query);
+    const matchS = status === "" || String(b.is_published) === status;
+    return matchQ && matchS;
+  });
+}
+
 export function BudayaAdmin() {
   const { showToast } = useToast();
   const [rows, setRows] = useState<Budaya[]>([]);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"" | "true" | "false">("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -58,6 +78,8 @@ export function BudayaAdmin() {
     } = await supabase.auth.getUser();
     if (!user) return;
     const rowId = form.id || crypto.randomUUID();
+    // Normalisasi topic_key seperti legacy: lowercase + spasi → strip.
+    const topicKey = form.topic_key.trim().toLowerCase().replace(/\s+/g, "-");
 
     let imageUrl = form.image_url || null;
     let newlyUploaded: StorageRef | null = null;
@@ -90,7 +112,7 @@ export function BudayaAdmin() {
 
     const payload = {
       title: form.title.trim(),
-      topic_key: form.topic_key.trim(),
+      topic_key: topicKey,
       category: form.category || "Umum",
       description: form.description,
       image_url: imageUrl,
@@ -135,9 +157,27 @@ export function BudayaAdmin() {
           setOriginalImageUrl(null);
           setOpen(true);
         }}
+        data-testid="add-budaya"
       >
         <Icon name="add" /> Tambah Budaya
       </button>
+      <div className="mb-3 flex flex-wrap gap-2">
+        <input
+          className="px-3 py-2 border border-outline-variant rounded-xl bg-white text-sm max-w-64"
+          placeholder="Cari judul atau key..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <select
+          className="px-3 py-2 border border-outline-variant rounded-xl bg-white text-sm"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as "" | "true" | "false")}
+        >
+          <option value="">Semua Status</option>
+          <option value="true">Dipublikasikan</option>
+          <option value="false">Draft</option>
+        </select>
+      </div>
       <div className="bg-white border border-outline-variant rounded-2xl overflow-x-auto">
         <table className="admin-table">
           <thead>
@@ -150,12 +190,19 @@ export function BudayaAdmin() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((b) => (
+            {filterBudaya(rows, query, statusFilter).map((b) => (
               <tr key={b.id}>
                 <td>
                   <strong>{b.title}</strong>
+                  {b.description ? (
+                    <span className="block text-xs text-on-surface-variant">
+                      {b.description.length > 60 ? b.description.slice(0, 60) + "..." : b.description}
+                    </span>
+                  ) : null}
                 </td>
-                <td>{b.topic_key}</td>
+                <td>
+                  <code className="text-xs bg-surface-container-low px-1.5 py-0.5 rounded">{b.topic_key}</code>
+                </td>
                 <td>{b.category}</td>
                 <td>{b.is_published ? "Publik" : "Draft"}</td>
                 <td className="flex gap-2">
@@ -197,6 +244,13 @@ export function BudayaAdmin() {
                 </td>
               </tr>
             ))}
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="text-center py-8 text-on-surface-variant">
+                  Belum ada konten budaya. Klik "Tambah Budaya" untuk membuat.
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </div>
@@ -226,7 +280,9 @@ export function BudayaAdmin() {
       {deleteId ? (
         <div className="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center">
           <div className="bg-white p-6 rounded-2xl">
-            <p className="mb-4">Hapus konten budaya?</p>
+            <p className="mb-4">
+              Hapus konten budaya <strong>{rows.find((b) => b.id === deleteId)?.title}</strong>?
+            </p>
             <button type="button" className="mr-2" onClick={() => setDeleteId(null)}>Batal</button>
             <button
               type="button"

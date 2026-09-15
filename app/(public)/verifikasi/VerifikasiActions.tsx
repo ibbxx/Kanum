@@ -52,3 +52,16 @@ export function StatusPoller({ intervalMs = 120000 }: { intervalMs?: number }) {
   }, [router, intervalMs]);
   return null;
 }
+
+/** Tautan pemulihan untuk siswa pending lama: selesaikan pendaftarannya. */
+export function CompleteSignupLink() {
+  return (
+    <a
+      href="/daftar/lengkapi"
+      className="mt-6 inline-flex items-center gap-2 bg-primary text-on-primary font-bold py-3 px-6 rounded-xl"
+    >
+      <Icon name="how_to_reg" className="text-[18px]" />
+      Lengkapi Pendaftaran
+    </a>
+  );
+}

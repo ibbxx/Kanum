@@ -15,9 +15,22 @@ html:not(.icons-ready) .material-symbols-outlined {
 }
 
 .ammatoa-pattern {
-  mask-image: radial-gradient(circle at 2px 2px, black 1px, transparent 0);
-  mask-size: 16px 16px;
-  opacity: 0.04;
+  background-image: radial-gradient(currentColor 0.8px, transparent 0.8px);
+  background-size: 18px 18px;
+  opacity: 0.08;
+}
+
+.cultural-mask {
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0));
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0));
+  background-image: radial-gradient(#003527 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+}
+
+.ammatoa-divider {
+  height: 4px;
+  background: repeating-linear-gradient(45deg, #064e3b 0, #064e3b 2px, transparent 0, transparent 10px);
+  opacity: 0.2;
 }
 
 .cultural-divider {
