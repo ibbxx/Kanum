@@ -152,7 +152,8 @@ CREATE TABLE IF NOT EXISTS public.student_answers (
   option_id     UUID REFERENCES public.question_options(id) ON DELETE SET NULL,
   is_correct    BOOLEAN NOT NULL DEFAULT false,
   points_earned INT NOT NULL DEFAULT 0,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (attempt_id, question_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_answers_attempt  ON public.student_answers(attempt_id);
@@ -333,7 +334,7 @@ GRANT EXECUTE ON FUNCTION public.ensure_own_profile() TO authenticated;
 -- TRIGGER – update student_progress setelah attempt selesai
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.handle_attempt_complete()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
   IF NEW.status = 'completed' AND (OLD.status IS NULL OR OLD.status <> 'completed') THEN
     INSERT INTO public.student_progress (
@@ -517,7 +518,7 @@ END $$;
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.get_student_quiz(p_exercise_id UUID)
 RETURNS JSONB
-LANGUAGE plpgsql SECURITY DEFINER AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_user_id   UUID := auth.uid();
   v_exercise  JSONB;
@@ -583,7 +584,7 @@ CREATE OR REPLACE FUNCTION public.submit_student_quiz(
   p_answers    JSONB  -- [{"question_id": "uuid", "option_id": "uuid"}]
 )
 RETURNS JSONB
-LANGUAGE plpgsql SECURITY DEFINER AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_user_id     UUID := auth.uid();
   v_exercise_id UUID;

@@ -57,6 +57,7 @@ DO $$ BEGIN
   ) THEN
     CREATE POLICY "KANUM question-images baca publik"
       ON storage.objects FOR SELECT
+      TO authenticated
       USING (bucket_id = 'question-images');
   END IF;
 END $$;

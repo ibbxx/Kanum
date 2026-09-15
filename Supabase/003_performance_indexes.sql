@@ -32,6 +32,7 @@ CREATE INDEX IF NOT EXISTS idx_members_student ON public.class_members(student_i
 -- Dashboard guru/admin: hitung attempt & progres
 CREATE INDEX IF NOT EXISTS idx_attempts_exercise ON public.exercise_attempts(exercise_id);
 CREATE INDEX IF NOT EXISTS idx_attempts_student ON public.exercise_attempts(student_id);
+CREATE INDEX IF NOT EXISTS idx_attempts_student_started ON public.exercise_attempts(student_id, started_at DESC);
 
 -- Laporan siswa: progres per siswa (RLS by student_id)
 CREATE INDEX IF NOT EXISTS idx_progress_student ON public.student_progress(student_id);
