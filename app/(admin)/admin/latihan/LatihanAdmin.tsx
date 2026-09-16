@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, getSessionUser } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
 import type { Exercise } from "@/lib/types";
@@ -87,9 +87,7 @@ export function LatihanAdmin({
     if (form.id) {
       ({ error } = await supabase.from("exercises").update(payload).eq("id", form.id));
     } else {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser(supabase);
       ({ error } = await supabase.from("exercises").insert({ ...payload, created_by: user?.id }));
     }
     if (error) showToast("Gagal menyimpan: " + error.message, "error");

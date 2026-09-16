@@ -91,11 +91,17 @@ export function imageNodeView(options: {
 
   function renderMenu(attrs: Record<string, unknown>) {
     menu.innerHTML = "";
-    const mk = (label: string, title: string, fn: () => void) => {
+    /* `short` = label pendek yang muncul DI BAWAH glyph pada layout mobile
+       (lihat @media max-width:640px di app/globals.css). Atribut ini inert di
+       desktop — tampilan & perilaku desktop tidak berubah. Tanpa label, tombol
+       berglyph (⇤ ⇔ ▚ ⟲ 🗑) tidak bisa dipahami di layar sentuh karena tooltip
+       tidak pernah muncul. */
+    const mk = (label: string, title: string, fn: () => void, short?: string) => {
       const b = document.createElement("button");
       b.type = "button";
       b.textContent = label;
       b.title = title;
+      if (short) b.dataset.short = short;
       b.addEventListener("mousedown", (e) => e.preventDefault());
       b.addEventListener("click", fn);
       return b;
@@ -157,14 +163,14 @@ export function imageNodeView(options: {
       menu.appendChild(ok);
     }
     const layout = (attrs.layout as string) ?? "inline";
-    for (const [label, title, val, on] of [
-      ["⇤", "Rata kiri", "left", (attrs.textAlign as string) === "left"],
-      ["⇔", "Rata tengah", "center", (attrs.textAlign as string) === "center"],
-      ["⇥", "Rata kanan", "right", (attrs.textAlign as string) === "right"],
-      ["▚", "Inline", "inline", layout === "inline"],
-      ["☰L", "Float kiri (teks mengalir)", "float-left", layout === "float-left"],
-      ["R☰", "Float kanan (teks mengalir)", "float-right", layout === "float-right"],
-      ["▣", "Blok tengah", "center", layout === "center"],
+    for (const [label, title, val, on, short] of [
+      ["⇤", "Rata kiri", "left", (attrs.textAlign as string) === "left", "Kiri"],
+      ["⇔", "Rata tengah", "center", (attrs.textAlign as string) === "center", "Tengah"],
+      ["⇥", "Rata kanan", "right", (attrs.textAlign as string) === "right", "Kanan"],
+      ["▚", "Inline", "inline", layout === "inline", "Inline"],
+      ["☰L", "Float kiri (teks mengalir)", "float-left", layout === "float-left", "Float kiri"],
+      ["R☰", "Float kanan (teks mengalir)", "float-right", layout === "float-right", "Float kanan"],
+      ["▣", "Blok tengah", "center", layout === "center", "Blok"],
     ] as const) {
       const b = mk(label, title, () => {
         if (title === "Blok tengah" && layout === "center")
@@ -177,12 +183,12 @@ export function imageNodeView(options: {
               : "layout",
           value: val,
         });
-      });
+      }, short);
       if (on) b.classList.add("on");
       menu.appendChild(b);
     }
-    menu.appendChild(mk("⟲", "Reset ukuran", () => applyAction({ kind: "reset-size" })));
-    menu.appendChild(mk("🗑", "Hapus gambar", () => applyAction({ kind: "delete" })));
+    menu.appendChild(mk("⟲", "Reset ukuran", () => applyAction({ kind: "reset-size" }), "Reset"));
+    menu.appendChild(mk("🗑", "Hapus gambar", () => applyAction({ kind: "delete" }), "Hapus"));
   }
 
   // Resize: drag sudut kanan-bawah, aspect ratio terjaga, commit ke attrs.

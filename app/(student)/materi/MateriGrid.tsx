@@ -101,7 +101,11 @@ export function MateriGrid({ items }: { items: MateriCard[] }) {
                 <h3 className="font-display font-bold text-primary mb-1.5">{m.title}</h3>
                 <p className="text-xs text-on-surface-variant">{m.description}</p>
               </div>
-              <div className="p-5 pt-0 flex items-center justify-between border-t border-outline-variant/40 mx-5 mb-5 mt-auto">
+              {/* `p-5` + `mx-5` membuat isi footer ter-inset 40px sementara judul
+                  & deskripsi di atas 20px (garis border-t sendiri mulai di 20px).
+                  `pb-5` saja mempertahankan jarak bawah yang sama, tapi isi footer
+                  kini rata dengan judul dan dengan ujung garis pemisah. */}
+              <div className="pb-5 flex items-center justify-between border-t border-outline-variant/40 mx-5 mb-5 mt-auto">
                 <span className="flex items-center gap-1 text-xs text-on-surface-variant">
                   <Icon name="schedule" className="text-sm text-primary" />
                   {m.duration_minutes} menit

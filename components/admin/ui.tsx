@@ -539,8 +539,9 @@ export function ListCard({
       </div>
       <div className="min-w-0 flex-1">{info}</div>
       {/* Baris aksi: di bawah lg selalu baris penuh (info tidak terhimpit di
-          tablet, di mana sidebar admin mengurangi lebar konten); ≥lg sejajar. */}
-      <div className="mt-2.5 flex w-full shrink-0 items-center justify-end gap-1.5 border-t border-outline-variant/60 pt-2.5 lg:mt-0 lg:w-auto lg:gap-2 lg:border-0 lg:pt-0">
+          tablet, di mana sidebar admin mengurangi lebar konten); ≥lg sejajar.
+          Mobile: justify-around → tombol tersebar rata, tidak menumpuk. */}
+      <div className="mt-2.5 flex w-full shrink-0 items-center justify-around gap-2 border-t border-outline-variant/60 pt-2.5 lg:mt-0 lg:w-auto lg:justify-end lg:gap-2 lg:border-0 lg:pt-0">
         {actions}
       </div>
     </div>

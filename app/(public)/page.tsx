@@ -6,33 +6,39 @@ export default function LandingPage() {
   return (
     <div>
       <header className="sticky top-0 z-40 bg-surface border-b border-outline-variant">
-        <nav className="flex justify-between items-center w-full px-gutter py-stack-sm max-w-container-max mx-auto h-20">
-          <span className="font-headline-sm text-headline-sm text-primary font-bold">
-            KANUM
-          </span>
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#fitur" className="font-body-md text-on-surface-variant hover:text-primary">
-              Fitur
-            </a>
-            <a href="#budaya" className="font-body-md text-on-surface-variant hover:text-primary">
-              Tentang
-            </a>
-            <Link
-              href="/login"
-              className="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-md hover:opacity-90"
-            >
-              Masuk
-            </Link>
-            <Link
-              href="/daftar"
-              className="border border-primary text-primary px-6 py-2.5 rounded-lg font-label-md hover:bg-primary-fixed/40"
-            >
-              Daftar
+        {/* Padding di elemen luar, lebar maksimum di wrapper dalam. Sebelumnya
+            `px-gutter` dan `max-w-container-max` menempel di elemen yang sama,
+            sehingga isi header (logo & menu) 24px lebih masuk ke dalam daripada
+            judul hero pada viewport >= 1280px. */}
+        <nav className="w-full px-gutter">
+          <div className="flex justify-between items-center max-w-container-max mx-auto h-20">
+            <span className="font-headline-sm text-headline-sm text-primary font-bold">
+              KANUM
+            </span>
+            <div className="hidden md:flex items-center gap-8">
+              <a href="#fitur" className="font-body-md text-on-surface-variant hover:text-primary">
+                Fitur
+              </a>
+              <a href="#budaya" className="font-body-md text-on-surface-variant hover:text-primary">
+                Tentang
+              </a>
+              <Link
+                href="/login"
+                className="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-md hover:opacity-90"
+              >
+                Masuk
+              </Link>
+              <Link
+                href="/daftar"
+                className="border border-primary text-primary px-6 py-2.5 rounded-lg font-label-md hover:bg-primary-fixed/40"
+              >
+                Daftar
+              </Link>
+            </div>
+            <Link href="/login" className="md:hidden text-primary">
+              <Icon name="menu" />
             </Link>
           </div>
-          <Link href="/login" className="md:hidden text-primary">
-            <Icon name="menu" />
-          </Link>
         </nav>
       </header>
 
@@ -91,25 +97,31 @@ export default function LandingPage() {
 
         <div className="cultural-divider w-full" />
 
-        <section className="py-stack-lg px-gutter max-w-container-max mx-auto" id="fitur">
-          <div className="text-center mb-16">
-            <h2 className="font-headline-md text-headline-md mb-4">Metode Belajar Terintegrasi</h2>
-            <div className="h-1 w-20 bg-secondary mx-auto rounded-full" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              ["menu_book", "Materi Kontekstual", "Kurikulum matematika yang diintegrasikan langsung dengan motif kain Tope' Le'Leng."],
-              ["museum", "Ensiklopedia Budaya", "Jelajahi kearifan lokal suku Ammatoa melalui galeri digital interaktif."],
-              ["quiz", "Evaluasi Adaptif", "Uji pemahamanmu dengan tantangan numerasi yang mengasah logika dan kepekaan budaya."],
-            ].map(([icon, title, desc]) => (
-              <div key={title} className="p-8 bg-white border border-slate-100 rounded-[24px]">
-                <div className="w-14 h-14 bg-primary-fixed rounded-2xl flex items-center justify-center mb-6">
-                  <Icon name={icon} className="text-primary text-3xl" />
+        {/* py-24 (bukan py-stack-lg = 2rem) supaya ritme vertikal section ini
+            sama dengan section budaya & CTA (96px). max-w dipindah ke wrapper
+            dalam supaya tepi kiri konten lurus dengan judul hero: sebelumnya
+            konten ter-inset 24px dan 48px lebih sempit di >= 1280px. */}
+        <section className="py-24 px-gutter" id="fitur">
+          <div className="max-w-container-max mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="font-headline-md text-headline-md mb-4">Metode Belajar Terintegrasi</h2>
+              <div className="h-1 w-20 bg-secondary mx-auto rounded-full" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                ["menu_book", "Materi Kontekstual", "Kurikulum matematika yang diintegrasikan langsung dengan motif kain Tope' Le'Leng."],
+                ["museum", "Ensiklopedia Budaya", "Jelajahi kearifan lokal suku Ammatoa melalui galeri digital interaktif."],
+                ["quiz", "Evaluasi Adaptif", "Uji pemahamanmu dengan tantangan numerasi yang mengasah logika dan kepekaan budaya."],
+              ].map(([icon, title, desc]) => (
+                <div key={title} className="p-8 bg-white border border-slate-100 rounded-[24px]">
+                  <div className="w-14 h-14 bg-primary-fixed rounded-2xl flex items-center justify-center mb-6">
+                    <Icon name={icon} className="text-primary text-3xl" />
+                  </div>
+                  <h3 className="font-headline-sm mb-3">{title}</h3>
+                  <p className="text-on-surface-variant">{desc}</p>
                 </div>
-                <h3 className="font-headline-sm mb-3">{title}</h3>
-                <p className="text-on-surface-variant">{desc}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
 

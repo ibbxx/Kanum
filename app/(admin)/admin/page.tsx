@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/Icon";
+import { StatusBadge } from "@/components/admin/ui";
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
@@ -53,14 +54,12 @@ export default async function AdminDashboardPage() {
             <p className="text-sm text-on-surface-variant">Belum ada latihan</p>
           ) : (
             (exList.data || []).map((e) => (
-              <div key={e.id} className="flex justify-between py-3 border-b border-surface-container-high last:border-0">
-                <div>
-                  <p className="font-bold text-sm">{e.title}</p>
+              <div key={e.id} className="flex items-center justify-between py-3 border-b border-surface-container-high last:border-0">
+                <div className="min-w-0">
+                  <p className="font-bold text-sm truncate">{e.title}</p>
                   <p className="text-xs text-on-surface-variant">{e.category}</p>
                 </div>
-                <span className={`text-xs font-bold px-2 py-1 rounded-full ${e.is_published ? "bg-green-100 text-green-800" : "bg-gray-100"}`}>
-                  {e.is_published ? "Publik" : "Draft"}
-                </span>
+                <StatusBadge published={e.is_published} />
               </div>
             ))
           )}

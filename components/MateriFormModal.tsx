@@ -1,5 +1,6 @@
 "use client";
 
+import { startTransition } from "react";
 import type { Materi } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 import { useContentForm, type ShowToast } from "@/hooks/useContentForm";
@@ -190,7 +191,20 @@ export default function MateriFormModal({
               <MateriContentEditor
                 ref={editorRef}
                 value={draft.content_html}
-                onChange={(html) => set("content_html", html)}
+                /**
+                 * Setiap ketikan sebelumnya memicu render SINKRON seluruh modal
+                 * (form + sidebar + toolbar editor ±40 tombol) di jalur kritis
+                 * input. startTransition memindahkan pembaruan draft itu ke
+                 * render yang bisa diinterupsi — ketikan berikutnya tidak lagi
+                 * menunggu render sebelumnya selesai, dan beberapa ketikan
+                 * cepat bergabung menjadi satu render.
+                 *
+                 * Isi konten yang DISIMPAN tidak berubah: saat Save, HTML
+                 * final tetap dibaca langsung dari instance editor
+                 * (editorRef.getHtmlWithReplacements) dan draft hanya dipakai
+                 * untuk indikator "belum disimpan".
+                 */
+                onChange={(html) => startTransition(() => set("content_html", html))}
                 onStaged={handleStaged}
                 uploadForCrop={uploadForCrop}
               />

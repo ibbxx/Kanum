@@ -67,7 +67,7 @@ function CekEmailFormInner() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-12 bg-surface-container-lowest">
+    <div className="min-h-[100dvh] flex items-center justify-center px-6 py-12 bg-surface-container-lowest">
       <div className="w-full max-w-md text-center">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-container rounded-2xl mb-6">
           <Icon name="mark_email_read" className="text-on-primary-container text-[32px]" filled />

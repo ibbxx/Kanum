@@ -43,7 +43,7 @@ export function StudentShell({
   }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-[100dvh] bg-background relative">
       {/* Overlay untuk Mobile */}
       {isMobileMenuOpen && (
         <div 
@@ -54,7 +54,7 @@ export function StudentShell({
 
       <aside 
         className={cn(
-          "h-screen w-64 fixed left-0 top-0 flex flex-col bg-white border-r border-outline-variant z-[60] transition-transform duration-300 md:translate-x-0",
+          "h-[100dvh] w-64 fixed left-0 top-0 flex flex-col bg-white border-r border-outline-variant z-[60] transition-transform duration-300 md:translate-x-0",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -94,7 +94,7 @@ export function StudentShell({
         </div>
       </aside>
 
-      <main className="md:ml-64 min-h-screen flex flex-col pb-24 md:pb-8">
+      <main className="md:ml-64 min-h-[100dvh] flex flex-col pb-24 md:pb-8">
         <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur border-b border-outline-variant">
           <div className="flex justify-between items-center w-full px-4 sm:px-gutter py-3 max-w-container-max mx-auto">
             <div className="flex items-center gap-3 md:hidden">

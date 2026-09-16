@@ -1,35 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
+import { createClient, getSessionUser } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
+import type { Profile } from "@/lib/types";
 
-export function SettingsForm() {
+/**
+ * Nilai awal (nama, kelas, email) datang dari server lewat props: layout
+ * siswa sudah membaca profil untuk request ini (getProfile di-cache per
+ * request), jadi mengambilnya lagi dari browser hanya menambah satu request
+ * Supabase dan sempat menampilkan form kosong. Perilaku simpan tidak berubah:
+ * identitas tetap diambil dari sesi lokal (getSessionUser, tanpa roundtrip)
+ * dan RLS tetap penjaga terakhir saat menulis.
+ */
+export function SettingsForm({ profile }: { profile: Profile | null }) {
   const { showToast } = useToast();
-  const [name, setName] = useState("");
-  const [klass, setKlass] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState(profile?.full_name || "");
+  const [klass, setKlass] = useState(profile?.class_name || "");
+  const [email] = useState(profile?.email || "");
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    const supabase = createClient();
-    void (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, class_name, email")
-        .eq("id", user.id)
-        .single();
-      if (data) {
-        setName(data.full_name || "");
-        setKlass(data.class_name || "");
-        setEmail(data.email || "");
-      }
-    })();
-  }, []);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -39,9 +28,7 @@ export function SettingsForm() {
     }
     setSaving(true);
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getSessionUser(supabase);
     if (!user) {
       setSaving(false);
       showToast("Sesi tidak ditemukan. Silakan login ulang.", "error");

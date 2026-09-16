@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatDateId, formatDateTimeId } from "@/lib/utils";
 
@@ -56,7 +56,29 @@ export function ProgresAdmin() {
     })();
   }, []);
 
-  const filtered = students.filter((s) => !q || s.full_name.toLowerCase().includes(q.toLowerCase()));
+  /**
+   * Progres dikelompokkan SEKALI per student_id.
+   *
+   * Dulu baris tabel memanggil `progress.filter(...)` untuk setiap siswa pada
+   * setiap render — termasuk setiap ketikan di kolom pencarian. Biayanya
+   * O(siswa × baris progres); untuk sekolah dengan ratusan siswa dan ribuan
+   * baris progres itu membuat pengetikan terasa berat. Hasil angka yang
+   * ditampilkan sama persis, hanya cara menghitungnya yang sekali jalan.
+   */
+  const progressByStudent = useMemo(() => {
+    const map = new Map<string, Progress[]>();
+    for (const p of progress) {
+      const arr = map.get(p.student_id);
+      if (arr) arr.push(p);
+      else map.set(p.student_id, [p]);
+    }
+    return map;
+  }, [progress]);
+
+  const filtered = useMemo(
+    () => students.filter((s) => !q || s.full_name.toLowerCase().includes(q.toLowerCase())),
+    [students, q],
+  );
 
   async function openDetail(s: Student) {
     const supabase = createClient();
@@ -121,8 +143,8 @@ export function ProgresAdmin() {
           </thead>
           <tbody>
             {filtered.map((s) => {
-              let progs = progress.filter((p) => p.student_id === s.id);
-              if (exId) progs = progs.filter((p) => p.exercise_id === exId);
+              const all = progressByStudent.get(s.id) ?? [];
+              const progs = exId ? all.filter((p) => p.exercise_id === exId) : all;
               const total = progs.length;
               const selesai = progs.filter((p) => p.is_completed).length;
               const best = total ? Math.round(Math.max(...progs.map((p) => Number(p.best_score)))) : 0;

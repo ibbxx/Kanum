@@ -15,7 +15,15 @@
       keluar kotak dan baris ikon jadi tidak simetris.
    Kini fontnya lokal dan definisi kelas dimiliki sendiri di sini: tidak ada
    lagi permintaan ke pihak ketiga, dan ukuran glyph mengikuti utility
-   Tailwind (`text-*`) pada elemen yang sama. */
+   Tailwind (`text-*`) pada elemen yang sama.
+
+   FONT DI-SUBSET: berkas di bawah ini hanya memuat 92 glyph ligature yang
+   benar-benar dipakai aplikasi (+ huruf/digit/underscore untuk menuliskan
+   namanya) — 9,7 kB, bukan 314 kB font penuh. Font penuh tetap aman dari
+   segi tampilan (bentuk glyph & metrik identik), tetapi bila menambah nama
+   ikon BARU di kode, glyph itu belum ada di berkas ini dan namanya akan
+   tampil sebagai teks mentah. Jalankan `npm run icons:subset` setelah
+   menambah ikon baru (skrip memverifikasi tiap nama punya ligature). */
 @font-face {
   font-family: "Material Symbols Outlined";
   font-style: normal;
@@ -227,15 +235,34 @@ html:not(.icons-ready) .material-symbols-outlined {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   max-width: min(92vw, 420px);
 }
-/* Di layar sempit: anchor ke kanan agar tidak terpotong kiri, dan lebih rendah
-   supaya input alt/caption tetap terlihat tanpa menutupi seluruh gambar */
+/* MOBILE: menu gambar menjadi ACTION BAR melayang di bawah viewport.
+   Menu yang di-anchor ke gambar punya dua cacat di layar kecil:
+   1) menonjol ke luar tepi editor (gambar sempit / berada di kiri) lalu
+      TERPOTONG oleh area scroll modal, dan
+   2) berada di ATAS gambar yang kebetulan dekat bagian atas editor — area
+      scroll tidak bisa bergeser ke atas, jadi seluruh menu tak terjangkau.
+   Bar melayang selalu terlihat penuh, tidak pernah terpotong, dan tombolnya
+   cukup besar untuk jari. `position: fixed` aman di dalam modal: overlay
+   modal juga `fixed inset-0` dan tidak ada ancestor ber-transform.
+   Desktop (≥641px) tidak tersentuh — aturan ini hanya berlaku <640px. */
 @media (max-width: 640px) {
   .imgwrap .imgmenu {
-    top: -6px;
-    left: auto;
-    right: 0;
+    position: fixed;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    top: auto;
     transform: none;
-    max-width: min(86vw, 340px);
+    max-width: none;
+    max-height: min(52dvh, 20rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.375rem;
+    border-radius: 1rem;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.2);
+    z-index: 45;
   }
 }
 .imgwrap.selected .imgmenu {
@@ -267,6 +294,48 @@ html:not(.icons-ready) .material-symbols-outlined {
   border-radius: 0.5rem;
 }
 
+/* Ukuran sentuh menu gambar — WAJIB berada SETELAH aturan dasar di atas:
+   spesifisitasnya sama (`.imgwrap .imgmenu button`), jadi urutan sumber yang
+   menentukan pemenangnya. */
+@media (max-width: 640px) {
+  .imgwrap .imgmenu button {
+    min-width: 2.75rem;
+    height: 2.75rem;
+    padding: 0 0.5rem;
+    font-size: 1rem;
+  }
+  /* Tombol aksi berglyph (⇤ ⇔ ▚ ⟲ 🗑 …) mendapat label pendek dari
+     `data-short` supaya tetap bisa dipahami tanpa tooltip (tooltip tidak
+     pernah muncul di layar sentuh). Desktop tidak memakai `data-short`. */
+  .imgwrap .imgmenu button[data-short] {
+    flex-direction: column;
+    gap: 1px;
+    min-width: 3.25rem;
+    height: 3rem;
+  }
+  .imgwrap .imgmenu button[data-short]::after {
+    content: attr(data-short);
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .imgwrap .imgmenu input {
+    height: 2.75rem;
+    width: auto;
+    flex: 1 1 8rem;
+    font-size: 0.9375rem;
+  }
+  /* Handle resize 16px terlalu kecil untuk jari → 20px di mobile. Area sentuh
+     efektif tetap ~44px lewat pseudo-element `.imgresize::after`. */
+  .imgwrap .imgresize {
+    right: -8px;
+    bottom: -8px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
 /* Handle crop: visualnya 16px, tapi target sentuh diperluas ke ~44px lewat
    pseudo-element transparan (pola sama dengan .imgresize di editor). */
 .crop-handle::after {
@@ -274,6 +343,14 @@ html:not(.icons-ready) .material-symbols-outlined {
   position: absolute;
   inset: -12px;
   border-radius: 9999px;
+}
+/* Handle crop di layar sentuh: hit area diperluas ke ~44px (16px visual +
+   2×14). Harus berada SETELAH aturan dasar di atas — spesifisitasnya sama,
+   jadi urutan sumber yang menentukan. Desktop tetap 40px. */
+@media (max-width: 640px) {
+  .crop-handle::after {
+    inset: -14px;
+  }
 }
 /* Caption pratinjau di editor */
 .imgwrap .imgcap {

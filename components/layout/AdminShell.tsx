@@ -69,7 +69,7 @@ export function AdminShell({
   }, []);
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
+    <div className="min-h-[100dvh] bg-surface text-on-surface">
       <aside className="fixed inset-y-0 left-0 z-[60] w-64 hidden md:flex flex-col border-r border-outline-variant bg-white">
         <div className="flex min-h-full flex-col p-8">
           <div className="mb-6">

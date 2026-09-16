@@ -1,5 +1,6 @@
 "use client";
 
+import { startTransition } from "react";
 import type { Budaya } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 import { useContentForm, type ShowToast } from "@/hooks/useContentForm";
@@ -178,7 +179,10 @@ export default function BudayaFormModal({
               <MateriContentEditor
                 ref={editorRef}
                 value={draft.content_html}
-                onChange={(html) => set("content_html", html)}
+                /* Lihat catatan pada MateriFormModal: pembaruan draft dari
+                   ketikan dibuat non-urgent (interruptible) — isi yang
+                   disimpan tetap dibaca dari instance editor saat Save. */
+                onChange={(html) => startTransition(() => set("content_html", html))}
                 placeholder="Tulis konten budaya di sini..."
                 onStaged={handleStaged}
                 uploadForCrop={uploadForCrop}

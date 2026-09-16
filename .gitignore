@@ -6,6 +6,7 @@ client_secret_*.json
 
 node_modules/
 .next/
+.next-dev/
 out/
 dist/
 tsconfig.tsbuildinfo

@@ -6,7 +6,7 @@ import { Icon } from "@/components/Icon";
 import type { Materi } from "@/lib/types";
 import { useContentList } from "@/hooks/useContentList";
 import { decorateCaptions, sanitizeHtml } from "@/lib/sanitize-html";
-import MateriFormModal from "@/components/MateriFormModal";
+import dynamic from "next/dynamic";
 import {
   ActionButton,
   CardActionButton,
@@ -20,6 +20,31 @@ import {
   SearchInput,
   StatusBadge,
 } from "@/components/admin/ui";
+
+/**
+ * Modal form + editor WYSIWYG (TipTap/ProseMirror + dialog crop) dimuat
+ * HANYA saat modal dibuka.
+ *
+ * Dulu import statis, sehingga `/admin/materi` dan `/guru/materi` menanggung
+ * seluruh bundle editor di initial load walau form tidak pernah dibuka —
+ * padahal modalnya sendiri sudah `if (!open) return null` (komponen anak,
+ * termasuk editor, tidak pernah ter-mount saat tertutup). Jadi memuatnya
+ * saat dibuka sama sekali tidak mengubah perilaku, hanya menunda unduhan.
+ */
+const loadMateriFormModal = () => import("@/components/MateriFormModal");
+const MateriFormModal = dynamic(loadMateriFormModal, { ssr: false });
+
+/**
+ * Unduhan yang sama (bundler men-dedupe) dipicu lebih awal saat ada NIAT
+ * membuka form — pointer masuk ke tombol/kartu daftar atau tombolnya difokus
+ * lewat keyboard — bukan saat diklik. Jadi ketika klik terjadi, chunk editor
+ * (±130 kB gzip) biasanya sudah selesai diunduh dan modal terbuka tanpa jeda.
+ * Perilaku lazy tetap sama untuk user yang tidak pernah menyentuh form:
+ * tanpa hover/fokus, import-nya tidak pernah dijalankan.
+ */
+function warmFormModal() {
+  void loadMateriFormModal();
+}
 
 // Nama tampilan level — konsisten dengan halaman materi siswa.
 const LEVEL_LABEL: Record<Materi["level"], string> = {
@@ -103,6 +128,8 @@ export function MateriAdmin() {
         <ActionButton
           variant="primary"
           onClick={openAdd}
+          onPointerEnter={warmFormModal}
+          onFocus={warmFormModal}
           data-testid="add-materi"
           className="w-full sm:w-auto"
         >
@@ -146,7 +173,13 @@ export function MateriAdmin() {
           title="Belum ada materi"
           desc="Buat materi pertama untuk mulai mengisi pembelajaran."
           action={
-            <ActionButton variant="primary" onClick={openAdd} className="mt-4">
+            <ActionButton
+              variant="primary"
+              onClick={openAdd}
+              onPointerEnter={warmFormModal}
+              onFocus={warmFormModal}
+              className="mt-4"
+            >
               <Icon name="add" className="text-[20px] leading-none" />
               Tambah Materi
             </ActionButton>
@@ -161,7 +194,10 @@ export function MateriAdmin() {
       ) : (
         <ul className="mt-4 space-y-3">
           {filtered.map((m, i) => (
-            <li key={m.id}>
+            /* onPointerEnter BUKAN gate fungsional — hanya pemanasan chunk
+               modal form begitu user mulai menjelajah daftar (menyorot kartu
+               adalah sinyal terkuat bahwa Edit akan diklik). */
+            <li key={m.id} onPointerEnter={warmFormModal}>
               <MateriCard
                 materi={m}
                 index={i + 1}
@@ -177,17 +213,19 @@ export function MateriAdmin() {
       )}
 
       {/* ── Modal form (WYSIWYG) ── */}
-      <MateriFormModal
-        open={modalOpen}
-        editing={editing}
-        nextSortOrder={nextSortOrder}
-        onClose={closeModal}
-        onSaved={() => {
-          closeModal();
-          void reload();
-        }}
-        showToast={showToast}
-      />
+      {modalOpen && (
+        <MateriFormModal
+          open={modalOpen}
+          editing={editing}
+          nextSortOrder={nextSortOrder}
+          onClose={closeModal}
+          onSaved={() => {
+            closeModal();
+            void reload();
+          }}
+          showToast={showToast}
+        />
+      )}
 
       {/* ── Pratinjau materi (read-only, tanpa keluar halaman admin) ── */}
       {previewTarget ? (
@@ -285,7 +323,7 @@ function MateriCard({
       }
       actions={
         <>
-          <CardActionButton onClick={onEdit} icon="edit" label="Edit" title="Edit materi" />
+          <CardActionButton onClick={onEdit} icon="edit_square" label="Edit" title="Edit materi" />
           <CardActionButton
             onClick={onPreview}
             icon="visibility"
@@ -295,7 +333,7 @@ function MateriCard({
           />
           <CardActionButton
             onClick={onTogglePublish}
-            icon={m.is_published ? "unpublish" : "publish"}
+            icon={m.is_published ? "unpublished" : "publish"}
             label={m.is_published ? "Unpublish" : "Publish"}
             title={m.is_published ? "Jadikan draft" : "Publikasikan"}
             tone={m.is_published ? "muted" : "primary"}

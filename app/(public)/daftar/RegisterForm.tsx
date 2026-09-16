@@ -57,7 +57,7 @@ function RegisterFormInner() {
   }
 
   return (
-    <div className="min-h-screen flex overflow-hidden bg-surface-container-lowest">
+    <div className="min-h-[100dvh] flex overflow-hidden bg-surface-container-lowest">
       <AuthBrandPanel />
 
       <main className="relative flex-1 flex items-center justify-center px-6 sm:px-10 py-12">

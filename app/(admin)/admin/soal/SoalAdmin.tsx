@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, getSessionUser } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
 import { ImageValidationError } from "@/lib/image/compressImage";
@@ -156,9 +156,7 @@ export function SoalAdmin({
       return;
     }
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getSessionUser(supabase);
     if (!user) return;
     const qId = editingId || crypto.randomUUID();
     let imageUrl = existingImage;

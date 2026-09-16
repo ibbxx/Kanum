@@ -5,7 +5,7 @@ import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
 import type { Budaya } from "@/lib/types";
 import { useContentList } from "@/hooks/useContentList";
-import BudayaFormModal from "@/components/BudayaFormModal";
+import dynamic from "next/dynamic";
 import {
   ActionButton,
   CardActionButton,
@@ -18,6 +18,21 @@ import {
   SearchInput,
   StatusBadge,
 } from "@/components/admin/ui";
+
+/**
+ * Modal form + editor WYSIWYG dimuat HANYA saat dibuka (lihat catatan panjang
+ * di MateriAdmin). Modal sudah `if (!open) return null`, jadi anaknya (editor)
+ * tidak pernah ter-mount saat tertutup — menunda unduhan tidak mengubah
+ * perilaku, hanya menghilangkan ~150 kB editor dari initial load
+ * `/admin/budaya` & `/guru/budaya`.
+ */
+const loadBudayaFormModal = () => import("@/components/BudayaFormModal");
+const BudayaFormModal = dynamic(loadBudayaFormModal, { ssr: false });
+
+/** Pemanasan chunk saat ada niat membuka form (lihat MateriAdmin). */
+function warmFormModal() {
+  void loadBudayaFormModal();
+}
 
 const MESSAGES = {
   onDraft: "Konten dijadikan draft.",
@@ -90,6 +105,8 @@ export function BudayaAdmin() {
         <ActionButton
           variant="primary"
           onClick={openAdd}
+          onPointerEnter={warmFormModal}
+          onFocus={warmFormModal}
           data-testid="add-budaya"
           className="w-full sm:w-auto"
         >
@@ -127,7 +144,13 @@ export function BudayaAdmin() {
           title="Belum ada konten budaya"
           desc="Buat konten pertama untuk mulai mengisi pembelajaran budaya."
           action={
-            <ActionButton variant="primary" onClick={openAdd} className="mt-4">
+            <ActionButton
+              variant="primary"
+              onClick={openAdd}
+              onPointerEnter={warmFormModal}
+              onFocus={warmFormModal}
+              className="mt-4"
+            >
               <Icon name="add" className="text-[20px] leading-none" />
               Tambah Budaya
             </ActionButton>
@@ -142,7 +165,7 @@ export function BudayaAdmin() {
       ) : (
         <ul className="mt-4 space-y-3">
           {filtered.map((b) => (
-            <li key={b.id}>
+            <li key={b.id} onPointerEnter={warmFormModal}>
               <BudayaCard
                 budaya={b}
                 busy={togglingId === b.id}
@@ -156,17 +179,19 @@ export function BudayaAdmin() {
       )}
 
       {/* ── Modal form (WYSIWYG) ── */}
-      <BudayaFormModal
-        open={modalOpen}
-        editing={editing}
-        nextSortOrder={nextSortOrder}
-        onClose={closeModal}
-        onSaved={() => {
-          closeModal();
-          void reload();
-        }}
-        showToast={showToast}
-      />
+      {modalOpen && (
+        <BudayaFormModal
+          open={modalOpen}
+          editing={editing}
+          nextSortOrder={nextSortOrder}
+          onClose={closeModal}
+          onSaved={() => {
+            closeModal();
+            void reload();
+          }}
+          showToast={showToast}
+        />
+      )}
 
       {/* ── Konfirmasi hapus ── */}
       {deleteTarget ? (
@@ -234,7 +259,7 @@ function BudayaCard({
           <CardActionButton onClick={onEdit} icon="edit" label="Edit" title="Edit konten" />
           <CardActionButton
             onClick={onTogglePublish}
-            icon={b.is_published ? "unpublish" : "publish"}
+            icon={b.is_published ? "unpublished" : "publish"}
             label={b.is_published ? "Unpublish" : "Publish"}
             title={b.is_published ? "Jadikan draft" : "Publikasikan"}
             tone={b.is_published ? "muted" : "primary"}

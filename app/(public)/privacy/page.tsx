@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-[100dvh] bg-surface">
       <nav className="sticky top-0 z-50 bg-white border-b border-outline-variant px-4 py-3 flex items-center gap-3">
         <Link href="/" className="text-primary font-semibold text-sm">
           ← Kembali

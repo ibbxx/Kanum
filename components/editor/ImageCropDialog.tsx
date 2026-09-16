@@ -296,7 +296,7 @@ export function ImageCropDialog({
                 key={r.label}
                 type="button"
                 aria-pressed={ratio === r.value}
-                className={`min-h-9 rounded-lg px-3 text-xs font-semibold transition-colors ${
+                className={`min-h-11 rounded-lg px-3 text-xs font-semibold transition-colors sm:min-h-9 ${
                   ratio === r.value
                     ? "bg-primary text-on-primary"
                     : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-low"

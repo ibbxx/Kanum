@@ -37,7 +37,7 @@ export default async function VerifikasiPage() {
   const isStudentPending = profile.role === "student";
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-12 bg-surface-container-lowest">
+    <div className="min-h-[100dvh] flex items-center justify-center px-6 py-12 bg-surface-container-lowest">
       <div className="w-full max-w-md">
         <div className="lg:flex items-center gap-3 mb-8 justify-center">
           <div className="inline-flex items-center justify-center w-11 h-11 bg-primary rounded-xl shadow-sm mb-2 lg:mb-0">

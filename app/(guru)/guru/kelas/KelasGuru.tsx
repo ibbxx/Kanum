@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, getSessionUser } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
 
@@ -63,9 +63,7 @@ export function KelasGuru() {
     }
     setLoading(true);
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getSessionUser(supabase);
     if (!user) {
       setLoading(false);
       showToast("Sesi tidak ditemukan. Silakan login ulang.", "error");

@@ -102,18 +102,24 @@ const SAFE_ATTRS: Record<string, RegExp> = {
 /**
  * Inline style DIBATASI ketat: hanya warna teks & highlight.
  * Deklarasi lain (position, url(), expression, dst.) dibuang.
+ *
+ * Pola bersifat KONSTAN, jadi dikompilasi SEKALI di module scope: sebelumnya
+ * `new RegExp(...)` dijalankan untuk setiap atribut style (per span berwarna
+ * /highlight) — kompilasi regex berulang yang membebani tiap ketikan di
+ * editor dan tiap penyimpanan konten.
  */
+const STYLE_VALUE =
+  "#[0-9a-fA-F]{3,8}|rgba?\\(\\s*\\d{1,3}(\\.\\d+)?\\s*,\\s*\\d{1,3}(\\.\\d+)?\\s*,\\s*\\d{1,3}(\\.\\d+)?(\\s*,\\s*(0|1|0?\\.\\d+)\\s*)?\\)|[a-zA-Z]{3,20}";
+const STYLE_DECL = new RegExp(
+  `^(color|background-color|text-align)\\s*:(\\s*(${STYLE_VALUE})|\\s*(left|center|right|justify))\\s*;?$`,
+  "i",
+);
+
 function sanitizeStyle(raw: string): string {
-  const value =
-    "#[0-9a-fA-F]{3,8}|rgba?\\(\\s*\\d{1,3}(\\.\\d+)?\\s*,\\s*\\d{1,3}(\\.\\d+)?\\s*,\\s*\\d{1,3}(\\.\\d+)?(\\s*,\\s*(0|1|0?\\.\\d+)\\s*)?\\)|[a-zA-Z]{3,20}";
-  const decl = new RegExp(
-    `^(color|background-color|text-align)\\s*:(\\s*(${value})|\\s*(left|center|right|justify))\\s*;?$`,
-    "i",
-  );
   return raw
     .split(";")
     .map((d) => d.trim())
-    .filter((d) => d && decl.test(d))
+    .filter((d) => d && STYLE_DECL.test(d))
     .map((d) => (d.endsWith(";") ? d : d + ";"))
     .join(" ");
 }

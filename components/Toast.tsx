@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -34,8 +35,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         ? "bg-error text-on-error"
         : "bg-on-surface text-surface";
 
+  // Nilai context dibuat stabil (showToast sudah useCallback): menampilkan /
+  // menyembunyikan toast tidak lagi me-render ulang seluruh konsumen useToast
+  // beserta subtree-nya.
+  const value = useMemo(() => ({ showToast }), [showToast]);
+
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={value}>
       {children}
       {toast ? (
         <div

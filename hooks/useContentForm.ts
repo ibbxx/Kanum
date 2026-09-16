@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, getSessionUser } from "@/lib/supabase/client";
 import { ImageValidationError } from "@/lib/image/compressImage";
 import {
   deleteStorageObject,
@@ -139,9 +139,7 @@ export function useContentForm<D extends ContentDraft, T extends ContentRow>(
       void (async () => {
         try {
           const supabase = createClient();
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
+          const user = await getSessionUser(supabase);
           if (!user) throw new Error("no-session");
           const up = await uploadImageCompressed(file, {
             bucket,
@@ -169,9 +167,7 @@ export function useContentForm<D extends ContentDraft, T extends ContentRow>(
   const uploadForCrop = useCallback(
     async (file: File) => {
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser(supabase);
       if (!user) throw new Error("no-session");
       const up = await uploadImageCompressed(file, {
         bucket,
@@ -276,9 +272,7 @@ export function useContentForm<D extends ContentDraft, T extends ContentRow>(
     setSaving(true);
     try {
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getSessionUser(supabase);
       if (!user) {
         showToast("Sesi tidak ditemukan. Silakan login ulang.", "error");
         return;
