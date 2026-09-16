@@ -20,24 +20,17 @@ The objective is to improve numeracy literacy through culture-based mathematics 
 
 # Current Technology
 
-Current Stack
+Stack (status: MIGRASI SELESAI — prototipe HTML statis sudah tidak dipakai)
 
-- HTML
-- CSS
-- JavaScript
-- TailwindCSS CDN
+- Next.js 15 (App Router) + React 19 + TypeScript (strict)
+- TailwindCSS 3 + PostCSS (font ikon & teks self-hosted, tanpa CDN)
+- Supabase: Postgres + Auth + Storage (lihat `Supabase/README.md`)
+- TipTap untuk editor konten admin
 
-Future Stack
-
-- Next.js
-- React
-- TypeScript
-- TailwindCSS
-- Shadcn UI
-- Prisma
-- MySQL
-
-Every code written today must be easy to migrate into the future stack.
+Catatan penting: **MySQL dan Prisma TIDAK dipakai.** Keduanya hanya rencana
+lama pada `Docs/01-ARCHITECTURE.md` dan `Docs/02-DATABASE.md` (dokumen
+perencanaan MVP) — data, autentikasi, dan file gambar seluruhnya lewat
+Supabase. Sumber kebenaran stack: `README.md` + `package.json`.
 
 ---
 

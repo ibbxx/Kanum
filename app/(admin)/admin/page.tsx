@@ -21,12 +21,9 @@ export default async function AdminDashboardPage() {
       .limit(5),
   ]);
 
-  type Top = {
-    attempts_count: number;
-    best_score: number;
-    profiles: { full_name: string; class_name: string } | null;
-  };
-  const tops = (progList.data || []) as unknown as Top[];
+  // Bentuk baris sudah ditentukan generated types (student_progress +
+  // embed profiles) — tidak perlu tipe buatan + cast.
+  const tops = progList.data || [];
 
   return (
     <div>

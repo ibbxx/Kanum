@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
 import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
 import type { Budaya } from "@/lib/types";
-import { deleteStoredImageByUrl } from "@/lib/image/storage";
+import { useContentList } from "@/hooks/useContentList";
 import BudayaFormModal from "@/components/BudayaFormModal";
 import {
   ActionButton,
@@ -19,6 +18,14 @@ import {
   SearchInput,
   StatusBadge,
 } from "@/components/admin/ui";
+
+const MESSAGES = {
+  onDraft: "Konten dijadikan draft.",
+  onPublish: "Konten dipublikasikan.",
+  deleted: "Konten budaya dihapus.",
+  toggleFailed: "Gagal mengubah status.",
+  deleteFailed: "Gagal menghapus konten.",
+};
 
 // Filter daftar budaya di sisi klien (behavior legacy dipertahankan):
 // search judul/topic_key + status publikasi — tanpa query tambahan
@@ -41,92 +48,34 @@ function filterBudaya(
 
 export function BudayaAdmin() {
   const { showToast } = useToast();
-  const [rows, setRows] = useState<Budaya[]>([]);
-  const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | "true" | "false">("");
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Budaya | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Budaya | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
-
-  // Fetch budaya — HANYA dipanggil dari useEffect (setelah mount).
-  // Jangan pernah memanggil load() langsung di body component (React 19:
-  // state update sebelum mount memicu warning).
-  const load = useCallback(async () => {
-    const supabase = createClient();
-    const { data, error } = await supabase.from("budaya").select("*").order("sort_order");
-    if (error) showToast(error.message, "error");
-    else setRows((data || []) as Budaya[]);
-    setLoaded(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const {
+    rows,
+    loaded,
+    reload,
+    modalOpen,
+    editing,
+    openAdd,
+    openEdit,
+    closeModal,
+    deleteTarget,
+    setDeleteTarget,
+    deleting,
+    confirmDelete,
+    togglingId,
+    togglePublish,
+    publishedCount,
+    nextSortOrder,
+  } = useContentList<Budaya>({
+    table: "budaya",
+    logTag: "BudayaAdmin",
+    messages: MESSAGES,
+    showToast,
+  });
 
   const filtered = filterBudaya(rows, query, statusFilter);
-  const publishedCount = rows.filter((b) => b.is_published).length;
-  const nextSortOrder = rows.length ? Math.max(...rows.map((b) => b.sort_order)) + 1 : 1;
-
-  // Quick publish/unpublish dari list — tanpa membuka form.
-  async function togglePublish(b: Budaya) {
-    if (togglingId) return;
-    setTogglingId(b.id);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("budaya")
-        .update({ is_published: !b.is_published })
-        .eq("id", b.id);
-      if (error) throw error;
-      showToast(b.is_published ? "Konten dijadikan draft." : "Konten dipublikasikan.", "success");
-      await load();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Gagal mengubah status.", "error");
-    } finally {
-      setTogglingId(null);
-    }
-  }
-
-  // Hapus: DB record dulu; storage menyusul hanya jika DB sukses (logic existing).
-  async function confirmDelete() {
-    if (!deleteTarget || deleting) return;
-    setDeleting(true);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.from("budaya").delete().eq("id", deleteTarget.id);
-      if (error) throw error;
-      if (deleteTarget.image_url) {
-        const ok = await deleteStoredImageByUrl(deleteTarget.image_url);
-        if (!ok)
-          console.error(
-            "[BudayaAdmin] gambar budaya gagal dihapus (perlu retry manual):",
-            deleteTarget.image_url,
-          );
-      }
-      showToast("Konten budaya dihapus.", "success");
-      setDeleteTarget(null);
-      await load();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Gagal menghapus konten.", "error");
-    } finally {
-      setDeleting(false);
-    }
-  }
-
-  function openAdd() {
-    setEditing(null);
-    setModalOpen(true);
-  }
-
-  function openEdit(b: Budaya) {
-    setEditing(b);
-    setModalOpen(true);
-  }
 
   return (
     <div className="mx-auto w-full max-w-6xl">
@@ -211,10 +160,10 @@ export function BudayaAdmin() {
         open={modalOpen}
         editing={editing}
         nextSortOrder={nextSortOrder}
-        onClose={() => setModalOpen(false)}
+        onClose={closeModal}
         onSaved={() => {
-          setModalOpen(false);
-          void load();
+          closeModal();
+          void reload();
         }}
         showToast={showToast}
       />

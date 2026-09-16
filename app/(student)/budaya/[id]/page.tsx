@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/Icon";
 import { SmartImage } from "@/components/SmartImage";
 import { decorateCaptions } from "@/lib/sanitize-html";
-import type { Budaya } from "@/lib/types";
 
 export default async function BudayaDetailPage({
   params,
@@ -26,7 +25,7 @@ export default async function BudayaDetailPage({
   }
 
   if (!data) notFound();
-  const b = data as Budaya;
+  const b = data;
 
   return (
     <div className="max-w-3xl">

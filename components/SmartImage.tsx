@@ -17,6 +17,12 @@ function isRemote(path: string) {
  *   semua kartu & hero yang sudah punya container berukuran.
  * - `fill={false}`: gambar alami, ikut lebar container (butuh width/height
  *   intrinsik next/image — dipakai lewat fallback <img> saja).
+ *
+ * Gagal bertahap: optimizer gagal → <img> langsung ke sumber asli (mis. format
+ * yang tidak didukung optimizer); sumber asli juga gagal (objek storage sudah
+ * tidak ada) → kotak netral, BUKAN ikon gambar rusak. `image_url` di DB bisa
+ * menunjuk objek yang sudah dihapus, dan tanpa tahap terakhir itu kartu siswa
+ * menampilkan gambar rusak.
  */
 export function SmartImage({
   src,
@@ -34,6 +40,14 @@ export function SmartImage({
   fill?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
+  const [dead, setDead] = useState(false);
+
+  // Sumber benar-benar tidak bisa dimuat — pertahankan kotak (className) supaya
+  // tata letak tidak ambruk, tanpa ikon gambar rusak.
+  if (dead) {
+    if (!fill) return null;
+    return <div className={className} role="img" aria-label={alt} />;
+  }
 
   const canOptimize = !failed && (src.startsWith("/") || isRemote(src));
 
@@ -57,7 +71,7 @@ export function SmartImage({
       src={src}
       alt={alt}
       className={className}
-      onError={() => setFailed(true)}
+      onError={() => setDead(true)}
     />
   );
 }

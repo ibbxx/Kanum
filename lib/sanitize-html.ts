@@ -176,16 +176,6 @@ export function extractImageSrcs(html: string): string[] {
 }
 
 /**
- * Buang seluruh <img> yang src-nya blob: dari HTML.
- * Dipakai saat simpan dibatalkan / modal ditutup agar blob URL
- * (yang sudah mati) tidak tertinggal di draft berikutnya.
- */
-export function stripBlobImages(html: string): string {
-  if (!html) return "";
-  return html.replace(/<img\b[^>]*?\bsrc\s*=\s*("blob:[^"]*"|'blob:[^']*'|blob:[^\s"'=<>`]+)[^>]*>\s*/gi, "");
-}
-
-/**
  * Bungkus <img> ber-caption menjadi <figure><img/><figcaption>…</figcaption></figure>
  * untuk rendering (preview admin & halaman siswa). Aman dipanggil berulang:
  * img yang sudah di dalam figure tidak diproses lagi.

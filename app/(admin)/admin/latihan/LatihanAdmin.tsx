@@ -7,14 +7,25 @@ import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
 import type { Exercise } from "@/lib/types";
 
-type Row = Exercise & { questions?: { id: string }[] };
+/** Kolom yang di-select daftar latihan (bukan seluruh baris exercises). */
+type Row = Pick<
+  Exercise,
+  | "id"
+  | "title"
+  | "description"
+  | "category"
+  | "difficulty"
+  | "is_published"
+  | "time_limit"
+  | "passing_score"
+> & { questions?: { id: string }[] };
 
 const emptyForm = {
   id: "",
   title: "",
   description: "",
   category: "",
-  difficulty: "Sedang" as Exercise["difficulty"],
+  difficulty: "Sedang",
   time_limit: 30,
   passing_score: 70,
   is_published: false,
@@ -41,7 +52,7 @@ export function LatihanAdmin({
       .select("id, title, category, difficulty, is_published, time_limit, passing_score, description, questions(id)")
       .order("created_at", { ascending: false });
     if (error) showToast("Gagal memuat: " + error.message, "error");
-    else setRows((data || []) as Row[]);
+    else setRows(data || []);
   }
 
   useEffect(() => {
@@ -216,7 +227,7 @@ export function LatihanAdmin({
               <input className="w-full px-3 py-2 border rounded-xl" placeholder="Judul" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               <textarea className="w-full px-3 py-2 border rounded-xl" placeholder="Deskripsi" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
               <input className="w-full px-3 py-2 border rounded-xl" placeholder="Kategori" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
-              <select className="w-full px-3 py-2 border rounded-xl" value={form.difficulty} onChange={(e) => setForm({ ...form, difficulty: e.target.value as Exercise["difficulty"] })}>
+              <select className="w-full px-3 py-2 border rounded-xl" value={form.difficulty} onChange={(e) => setForm({ ...form, difficulty: e.target.value })}>
                 <option>Mudah</option>
                 <option>Sedang</option>
                 <option>Sulit</option>

@@ -6,19 +6,26 @@ import { Icon } from "@/components/Icon";
 import { difficultyBadge } from "@/lib/utils";
 import type { Exercise, StudentProgress } from "@/lib/types";
 
-type Item = Exercise & { questions?: { id: string }[] };
+/** Kolom yang benar-benar di-select halaman `/latihan` (bukan seluruh baris). */
+type Item = Pick<
+  Exercise,
+  "id" | "title" | "description" | "category" | "difficulty" | "created_at"
+> & { questions?: { id: string }[] };
+
+/** Kolom progres yang dipakai grid ini. */
+type ProgressItem = Pick<StudentProgress, "exercise_id" | "best_score" | "is_completed">;
 
 export function LatihanGrid({
   exercises,
   progress,
 }: {
   exercises: Item[];
-  progress: StudentProgress[];
+  progress: ProgressItem[];
 }) {
   const [cat, setCat] = useState("");
   const [sort, setSort] = useState("newest");
   const progMap = useMemo(() => {
-    const m: Record<string, StudentProgress> = {};
+    const m: Record<string, ProgressItem> = {};
     progress.forEach((p) => {
       m[p.exercise_id] = p;
     });

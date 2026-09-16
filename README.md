@@ -62,4 +62,6 @@ Quiz memakai RPC Supabase `get_student_quiz` dan `submit_student_quiz` (lihat `S
 - Env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - Redirect OAuth Google: `{origin}/auth/callback`
 
-Kode HTML lama ada di `_legacy/` sebagai referensi, tidak di-deploy.
+Migrasi konten dari prototipe HTML lama sudah selesai (8 bab materi + 6 topik
+budaya, seluruh gambarnya tersimpan di Supabase Storage). Kode prototipe lama
+sudah dihapus dari repo — masih bisa diambil dari riwayat git bila diperlukan.

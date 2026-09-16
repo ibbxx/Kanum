@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Icon } from "@/components/Icon";
 import { SmartImage } from "@/components/SmartImage";
 import { cn } from "@/lib/utils";
@@ -184,7 +184,7 @@ export function ModalShell({
 }
 
 /** Footer sticky: status di kiri, aksi di kanan, aman terhadap safe-area. */
-export function ModalFooter({
+function ModalFooter({
   status,
   dirty,
   children,
@@ -339,6 +339,170 @@ export function CardActionButton({
       />
       <span className="hidden lg:inline">{label}</span>
     </button>
+  );
+}
+
+/* ══════════ Form konten (dipakai modal Materi & Budaya) ══════════ */
+
+/**
+ * Saklar publikasi draft ↔ published. Teks status & hint diterima dari
+ * pemanggil supaya copy tiap entitas tetap apa adanya.
+ */
+export function PublishToggle({
+  value,
+  onChange,
+  hintOn,
+  hintOff,
+  disabled,
+}: {
+  value: boolean;
+  onChange: (v: boolean) => void;
+  hintOn: string;
+  hintOff: string;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-outline-variant p-4">
+      <label className="flex cursor-pointer items-center justify-between gap-3">
+        <span>
+          <span className="block text-sm font-semibold text-on-surface">
+            {value ? "Published" : "Draft"}
+          </span>
+          <span className="block text-xs text-on-surface-variant">
+            {value ? hintOn : hintOff}
+          </span>
+        </span>
+        <span className="relative inline-flex shrink-0">
+          <input
+            type="checkbox"
+            className="peer sr-only"
+            checked={value}
+            disabled={disabled}
+            onChange={(e) => onChange(e.target.checked)}
+          />
+          <span className="h-6 w-11 rounded-full bg-surface-container-high transition-colors peer-checked:bg-primary" />
+          <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+        </span>
+      </label>
+    </div>
+  );
+}
+
+/**
+ * Panel cover: preview (termasuk preview blob lokal sebelum di-upload),
+ * tombol Ganti/Hapus, dan file picker tersembunyi.
+ */
+export function CoverField({
+  value,
+  alt,
+  pending,
+  disabled,
+  onPick,
+  onClear,
+}: {
+  value: string | null;
+  alt: string;
+  /** File sudah dipilih tapi belum di-upload → label tombol berubah. */
+  pending: boolean;
+  disabled?: boolean;
+  onPick: (file: File) => void;
+  onClear: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <div className="rounded-2xl border border-outline-variant p-4">
+      {value ? (
+        <div className="space-y-3">
+          <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-surface-container-low">
+            <SmartImage src={value} alt={alt} sizes="320px" className="object-cover" />
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={disabled}
+              className="flex-1 rounded-xl border border-outline-variant px-3 py-2 text-sm font-semibold text-on-surface hover:bg-surface-container-low disabled:opacity-50"
+            >
+              Ganti Cover
+            </button>
+            <button
+              type="button"
+              onClick={onClear}
+              disabled={disabled}
+              className="rounded-xl border border-outline-variant px-3 py-2 text-sm font-semibold text-error hover:bg-error-container/40 disabled:opacity-50"
+            >
+              Hapus
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={disabled}
+          className="flex w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-outline-variant px-4 py-8 text-center transition-colors hover:border-primary hover:bg-surface-container-low"
+        >
+          <Icon name="add_photo_alternate" className="text-[28px] leading-none text-on-surface-variant" />
+          <span className="text-sm font-semibold text-on-surface">
+            {pending ? "Cover siap — klik Simpan" : "Unggah cover"}
+          </span>
+          <span className="text-xs text-on-surface-variant">
+            JPG/PNG/WebP — dikompres otomatis
+          </span>
+        </button>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          e.target.value = "";
+          if (f) onPick(f);
+        }}
+      />
+    </div>
+  );
+}
+
+/** Footer modal form: status perubahan + aksi Batal/Simpan. */
+export function SaveFooter({
+  dirty,
+  saving,
+  onCancel,
+  onSave,
+  testId,
+}: {
+  dirty: boolean;
+  saving: boolean;
+  onCancel: () => void;
+  onSave: () => void;
+  testId?: string;
+}) {
+  return (
+    <ModalFooter
+      dirty={dirty && !saving}
+      status={saving ? "Menyimpan..." : dirty ? "● Belum disimpan" : "Tidak ada perubahan"}
+      testId={testId}
+    >
+      <ActionButton onClick={onCancel} disabled={saving}>
+        Batal
+      </ActionButton>
+      <ActionButton variant="primary" onClick={onSave} disabled={saving}>
+        {saving ? (
+          <>
+            <Icon name="progress_activity" className="text-[16px] leading-none animate-spin" />
+            Menyimpan...
+          </>
+        ) : (
+          <>
+            <Icon name="check" className="text-[16px] leading-none" />
+            Simpan
+          </>
+        )}
+      </ActionButton>
+    </ModalFooter>
   );
 }
 

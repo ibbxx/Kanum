@@ -5,18 +5,15 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
 import type { UserRole } from "@/lib/types";
+import type { Database } from "@/types/database";
 
-type Akun = {
-  id: string;
-  full_name: string;
-  email: string;
-  role: UserRole;
-  status: string;
-  class_name: string;
-  created_at: string;
-};
+/** Kolom yang di-select daftar akun — diturunkan dari skema Supabase. */
+type Akun = Pick<
+  Database["public"]["Tables"]["profiles"]["Row"],
+  "id" | "full_name" | "email" | "role" | "status" | "class_name" | "created_at"
+>;
 
-const ROLE_LABEL: Record<UserRole, string> = {
+const ROLE_LABEL: Record<string, string> = {
   admin: "Admin",
   teacher: "Guru",
   student: "Siswa",
@@ -39,7 +36,7 @@ export function KelolaAkun() {
       showToast("Gagal memuat akun: " + error.message, "error");
       return;
     }
-    setRows((data || []) as Akun[]);
+    setRows(data || []);
   }
 
   useEffect(() => {

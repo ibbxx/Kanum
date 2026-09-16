@@ -19,10 +19,12 @@ import { createClient } from "@/lib/supabase/client";
 import { compressImage, IMAGE_ERROR_MESSAGE, ImageValidationError, IMAGE_MAX_BYTES } from "./compressImage";
 
 /** Buckets that hold user-uploaded images in this app. */
-export const IMAGE_BUCKETS = ["question-images", "materi-images", "budaya-images"] as const;
+const IMAGE_BUCKETS = ["question-images", "materi-images", "budaya-images"] as const;
+
+/** Buckets that may contain images in this app (see IMAGE_BUCKETS). */
 export type ImageBucket = (typeof IMAGE_BUCKETS)[number];
 
-export type UploadedImage = {
+type UploadedImage = {
   /** Storage path inside the bucket, e.g. `${userId}/${id}-${ts}.webp`. */
   path: string;
   /** Public URL to persist in the DB image_url column. */
@@ -75,7 +77,7 @@ export function resolveStorageRef(url: string | null | undefined): StorageRef | 
   return null;
 }
 
-export function isImageBucket(bucket: string): bucket is ImageBucket {
+function isImageBucket(bucket: string): bucket is ImageBucket {
   return (IMAGE_BUCKETS as readonly string[]).includes(bucket);
 }
 
@@ -121,7 +123,7 @@ export async function uploadImageCompressed(
  * with enough context (bucket + path) to be retried/cleaned up manually.
  * Returns the refs that FAILED to be deleted (retryable set).
  */
-export async function deleteStorageObjects(refs: Array<StorageRef | null>): Promise<StorageRef[]> {
+async function deleteStorageObjects(refs: Array<StorageRef | null>): Promise<StorageRef[]> {
   const valid = refs.filter((r): r is StorageRef => r !== null);
   if (!valid.length) return [];
 

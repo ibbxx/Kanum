@@ -1,14 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/profile";
 import { Icon } from "@/components/Icon";
 import { SmartImage } from "@/components/SmartImage";
-import type { StudentProgress } from "@/lib/types";
 
 export default async function DashboardPage() {
   // getProfile() di-cache per request (layout sudah memanggilnya) — user id
   // diambil dari sini, bukan roundtrip auth.getUser() kedua.
   const profile = await getProfile();
+  // Jaring pengaman: layout siswa sudah redirect bila profil tidak ada,
+  // jadi `profile` di sini dijamin — tanpa ini `student_id` bisa undefined
+  // dan query diam-diam salah filter.
+  if (!profile) redirect("/login");
   const supabase = await createClient();
 
   // Kedua query independen → paralel (dulu: sequential).
@@ -16,7 +20,7 @@ export default async function DashboardPage() {
     supabase
       .from("student_progress")
       .select("is_completed, best_score, attempts_count")
-      .eq("student_id", profile?.id),
+      .eq("student_id", profile.id),
     supabase
       .from("budaya")
       .select("id, title, category, description, image_url")
@@ -25,7 +29,7 @@ export default async function DashboardPage() {
       .limit(3),
   ]);
 
-  const list = (progressesRes.data || []) as StudentProgress[];
+  const list = progressesRes.data || [];
   const completed = list.filter((p) => p.is_completed).length;
   const attempted = list.length;
   const avgScore =

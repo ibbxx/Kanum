@@ -28,7 +28,7 @@ const START_QUALITY = 0.82;
 /** Stop lowering quality below this — further reduction comes from resize. */
 const MIN_QUALITY = 0.4;
 
-export type CompressedImage = {
+type CompressedImage = {
   /** Compressed image ready for upload. */
   file: File;
   mime: string;
@@ -79,7 +79,7 @@ function hasAlpha(ctx: CanvasRenderingContext2D, width: number, height: number):
 }
 
 /** Validate type/size only — no UI-facing details. */
-export async function validateImageFile(file: File): Promise<void> {
+async function validateImageFile(file: File): Promise<void> {
   const type = (file.type || "").toLowerCase();
   const looksImage = ACCEPTED_MIME.includes(type) || /^image\//.test(type);
   if (!looksImage) throw new ImageValidationError(IMAGE_ERROR_MESSAGE);
@@ -114,7 +114,7 @@ export async function compressImage(
       file,
       mime: type,
       size: file.size,
-      ext: extForMime(type === "image/jpeg" ? "image/jpeg" : type),
+      ext: extForMime(type),
     };
   }
 
@@ -158,14 +158,12 @@ export async function compressImage(
   let best: { blob: Blob; mime: string } | null = null;
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
-    let result: { blob: Blob; mime: string } | null = null;
-
     for (const mime of encodeOrder) {
       const blob = await canvasToBlob(canvas, mime, quality);
       if (!blob) continue;
       if (blob.size > maxBytes) continue;
+      // Simpan hasil TERKECIL di antara semua iterasi & format.
       if (!best || blob.size < best.blob.size) best = { blob, mime };
-      if (!result || blob.size < result.blob.size) result = { blob, mime };
     }
 
     if (best) break;

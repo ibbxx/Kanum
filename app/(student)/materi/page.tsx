@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/Icon";
 import { SmartImage } from "@/components/SmartImage";
 import { MateriGrid } from "./MateriGrid";
-import type { Materi } from "@/lib/types";
 
 export default async function MateriPage() {
   const supabase = await createClient();
@@ -17,7 +16,7 @@ export default async function MateriPage() {
     .eq("is_published", true)
     .order("sort_order");
 
-  const items = (data || []) as Materi[];
+  const items = data || [];
   const totalMinutes = items.reduce((acc, curr) => acc + (curr.duration_minutes || 0), 0);
   const totalHours = totalMinutes > 0 ? `~${Math.max(1, Math.round(totalMinutes / 60))} Jam` : "~3 Jam";
   const totalBab = items.length;

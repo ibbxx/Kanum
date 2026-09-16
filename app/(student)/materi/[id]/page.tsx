@@ -5,7 +5,6 @@ import { Icon } from "@/components/Icon";
 import { SmartImage } from "@/components/SmartImage";
 import { levelBadge } from "@/lib/utils";
 import { decorateCaptions } from "@/lib/sanitize-html";
-import type { Materi } from "@/lib/types";
 
 export default async function MateriDetailPage({
   params,
@@ -22,7 +21,7 @@ export default async function MateriDetailPage({
     .single();
 
   if (!data) notFound();
-  const m = data as Materi;
+  const m = data;
 
   return (
     <div className="max-w-3xl">

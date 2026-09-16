@@ -1,5 +1,10 @@
 # 03 — UI/UX DESIGN SPECIFICATION
 
+> **⚠️ STATUS: DOKUMEN PERENCANAAN MVP (v1.0).** Sebagian gaya visual sudah
+> diimplementasikan (token warna Tailwind ada di `tailwind.config.ts`, dan
+> `Docs/DESIGN.md` sesuai dengan implementasi). Untuk perilaku UI yang berlaku,
+> kode di `components/` dan `app/globals.css` adalah acuan utama.
+
 **Produk:** Platform Pembelajaran Matematika Berbasis Etnomatematika Ammatoa Kajang
 **Versi Dokumen:** 1.0 (MVP Planning)
 **Filosofi Desain:** Simple but Powerful, Educational First, Modern SaaS Dashboard

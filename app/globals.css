@@ -116,20 +116,16 @@ html:not(.icons-ready) .material-symbols-outlined {
   }
 }
 
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
 /* Konten panjang tanpa spasi (URL/kode) tidak boleh memaksa halaman melebar
    di mobile — teks dipatahkan, bukan menimbulkan scroll horizontal. */
 .prose-kanum {
   overflow-wrap: break-word;
 }
 
+/* H1 ikut grup ini: editor mendukung H1–H4, jadi H1 di preview & halaman
+   siswa harus tampil dengan font/warna/weight/margin yang sama seperti
+   H2–H4 — bukan tanpa gaya (preflight Tailwind me-reset heading). */
+.prose-kanum h1,
 .prose-kanum h2,
 .prose-kanum h3,
 .prose-kanum h4 {
@@ -149,14 +145,8 @@ html:not(.icons-ready) .material-symbols-outlined {
   display: block;
   margin: 0.75rem auto; /* default center, tidak overflow mobile */
 }
-.prose-kanum img[data-align="left"] {
-  margin-left: 0;
-  margin-right: auto;
-}
-.prose-kanum img[data-align="right"] {
-  margin-left: auto;
-  margin-right: 0;
-}
+/* (aturan data-align ada di blok "Layout gambar pada RENDERER" di bawah —
+   sebelumnya terduplikasi di sini dengan deklarasi identik.) */
 
 /* Gambar inline di editor WYSIWYG: klik → selected state */
 .materi-editor img {

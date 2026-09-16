@@ -1,5 +1,12 @@
 # 01 — SOFTWARE ARCHITECTURE DOCUMENT
 
+> **⚠️ STATUS: DOKUMEN PERENCANAAN MVP (v1.0) — SEBAGIAN SUDAH TIDAK BERLAKU.**
+> Implementasi yang berjalan memakai **Next.js 15 (App Router) + Supabase
+> (Postgres/Auth/Storage) + Tailwind**, bukan MySQL 8 + Prisma seperti tertulis
+> di bawah ini. Sumber kebenaran terkini: [`README.md`](../README.md),
+> [`Supabase/README.md`](../Supabase/README.md), dan kode di `app/` + `lib/`.
+> Dokumen ini dipertahankan sebagai catatan sejarah perencanaan.
+
 **Produk:** Platform Pembelajaran Matematika Berbasis Etnomatematika Ammatoa Kajang
 **Kode Internal:** EtnoMath Platform (working title)
 **Versi Dokumen:** 1.0 (MVP Planning)

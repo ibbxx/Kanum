@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { subscribeToVerificationQueue } from "@/lib/verify-badge";
 import { Icon } from "@/components/Icon";
 import { LogoutButton } from "@/components/layout/LogoutButton";

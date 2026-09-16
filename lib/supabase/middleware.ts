@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { homePathForAccess, resolveAccess } from "@/lib/auth";
+import type { Database } from "@/types/database";
 
 const publicExact = new Set([
   "/",
@@ -10,6 +11,25 @@ const publicExact = new Set([
   "/privacy",
   "/terms",
 ]);
+
+/**
+ * Redirect ke `pathname` sambil MEMBAWA cookie sesi yang sudah di-refresh —
+ * tanpa ini, cookie baru dari setAll() hilang saat redirect dan sesi
+ * tampak tidak pernah diperbarui.
+ */
+function redirectWithCookies(
+  request: NextRequest,
+  pathname: string,
+  response: NextResponse
+) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  const redirect = NextResponse.redirect(url);
+  response.cookies.getAll().forEach((c) => {
+    redirect.cookies.set(c.name, c.value);
+  });
+  return redirect;
+}
 
 function isPublicPath(pathname: string) {
   if (publicExact.has(pathname)) return true;
@@ -21,7 +41,7 @@ function isPublicPath(pathname: string) {
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -88,18 +108,34 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/laporan") ||
     pathname.startsWith("/pengaturan");
 
-  const { role, access } = await resolveAccess(supabase, userId);
+  const { role, access, missing } = await resolveAccess(supabase, userId);
+
+  // Sesi yatim: JWT masih sah menurut verifikasi LOKAL (getClaims), tapi akun
+  // auth-nya sudah tidak ada — terjadi bila admin menghapus akun sementara
+  // browser user masih memegang sesinya. Tanpa cabang ini middleware
+  // menganggap user masih login (→ /login dialihkan ke /verifikasi), sementara
+  // /verifikasi tidak menemukan profil dan mengalihkan balik ke /login:
+  // perulangan tanpa henti. Verifikasi ke server hanya pada kasus langka ini,
+  // supaya user yang sah tidak pernah tergeser. Bila benar-benar yatim, cookie
+  // sesi dibuang dan permintaan diperlakukan sebagai anonim.
+  if (missing) {
+    const {
+      data: { user: live },
+    } = await supabase.auth.getUser();
+    if (!live) {
+      for (const c of request.cookies.getAll()) {
+        if (c.name.startsWith("sb-") && c.name.includes("-auth-token")) {
+          supabaseResponse.cookies.delete(c.name);
+        }
+      }
+      return supabaseResponse;
+    }
+  }
 
   // Login/daftar tidak relevan bagi user yang sudah masuk —
   // arahkan langsung ke halaman rumah sesuai aksesnya.
   if (pathname === "/login" || pathname === "/daftar") {
-    const url = request.nextUrl.clone();
-    url.pathname = homePathForAccess(access, role);
-    const redirect = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((c) => {
-      redirect.cookies.set(c.name, c.value);
-    });
-    return redirect;
+    return redirectWithCookies(request, homePathForAccess(access, role), supabaseResponse);
   }
 
   // Akun pending/rejected hanya boleh di halaman publik, /verifikasi,
@@ -111,45 +147,21 @@ export async function updateSession(request: NextRequest) {
     !pathname.startsWith("/auth/") &&
     (isAdminPath || isTeacherPath || isStudentPath)
   ) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/verifikasi";
-    const redirect = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((c) => {
-      redirect.cookies.set(c.name, c.value);
-    });
-    return redirect;
+    return redirectWithCookies(request, "/verifikasi", supabaseResponse);
   }
 
   // /admin hanya admin sungguhan (guru masuk lewat /guru).
   if (isAdminPath && role !== "admin") {
-    const url = request.nextUrl.clone();
-    url.pathname = homePathForAccess(access, role);
-    const redirect = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((c) => {
-      redirect.cookies.set(c.name, c.value);
-    });
-    return redirect;
+    return redirectWithCookies(request, homePathForAccess(access, role), supabaseResponse);
   }
 
   // /guru untuk teacher; admin juga boleh (kelola semua).
   if (isTeacherPath && role !== "teacher" && role !== "admin") {
-    const url = request.nextUrl.clone();
-    url.pathname = homePathForAccess(access, role);
-    const redirect = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((c) => {
-      redirect.cookies.set(c.name, c.value);
-    });
-    return redirect;
+    return redirectWithCookies(request, homePathForAccess(access, role), supabaseResponse);
   }
 
   if (isStudentPath && role !== "student") {
-    const url = request.nextUrl.clone();
-    url.pathname = homePathForAccess(access, role);
-    const redirect = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((c) => {
-      redirect.cookies.set(c.name, c.value);
-    });
-    return redirect;
+    return redirectWithCookies(request, homePathForAccess(access, role), supabaseResponse);
   }
 
   return supabaseResponse;

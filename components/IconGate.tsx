@@ -13,11 +13,15 @@ export function IconGate() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const anyWindow = window as unknown as {
-      document?: { fonts?: { ready: Promise<FontFaceSet> } };
-    };
-    const fonts = anyWindow.document?.fonts;
-    if (!fonts) {
+    // Guard runtime tetap dipertahankan untuk browser lama yang belum punya
+    // Font Loading API — tanpa perlu cast bentuk window/document.
+    let fonts: FontFaceSet | undefined;
+    try {
+      fonts = document.fonts;
+    } catch {
+      fonts = undefined;
+    }
+    if (!fonts?.ready) {
       setReady(true);
       return;
     }

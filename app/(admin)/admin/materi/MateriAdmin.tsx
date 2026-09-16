@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
 import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
 import type { Materi } from "@/lib/types";
-import { deleteStoredImageByUrl } from "@/lib/image/storage";
+import { useContentList } from "@/hooks/useContentList";
 import { decorateCaptions, sanitizeHtml } from "@/lib/sanitize-html";
 import MateriFormModal from "@/components/MateriFormModal";
 import {
@@ -27,6 +26,14 @@ const LEVEL_LABEL: Record<Materi["level"], string> = {
   dasar: "Dasar",
   menengah: "Menengah",
   lanjut: "Lanjut",
+};
+
+const MESSAGES = {
+  onDraft: "Materi dijadikan draft.",
+  onPublish: "Materi dipublikasikan.",
+  deleted: "Materi dihapus.",
+  toggleFailed: "Gagal mengubah status.",
+  deleteFailed: "Gagal menghapus materi.",
 };
 
 // Filter daftar materi di sisi klien (behavior legacy dipertahankan):
@@ -52,95 +59,36 @@ function filterMateri(
 
 export function MateriAdmin() {
   const { showToast } = useToast();
-  const [rows, setRows] = useState<Materi[]>([]);
-  const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | "true" | "false">("");
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Materi | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Materi | null>(null);
   const [previewTarget, setPreviewTarget] = useState<Materi | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  // Fetch materi — HANYA dipanggil dari useEffect (setelah mount).
-  // Jangan pernah memanggil load() langsung di body component:
-  // setRows/setLoaded saat render memicu warning "Can't perform a React
-  // state update on a component that hasn't mounted yet" (React 19).
-  const load = useCallback(async () => {
-    const supabase = createClient();
-    const { data, error } = await supabase.from("materi").select("*").order("sort_order");
-    if (error) showToast(error.message, "error");
-    else setRows((data || []) as Materi[]);
-    setLoaded(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const {
+    rows,
+    loaded,
+    reload,
+    modalOpen,
+    editing,
+    openAdd,
+    openEdit,
+    closeModal,
+    deleteTarget,
+    setDeleteTarget,
+    deleting,
+    confirmDelete,
+    togglingId,
+    togglePublish,
+    publishedCount,
+    nextSortOrder,
+  } = useContentList<Materi>({
+    table: "materi",
+    logTag: "MateriAdmin",
+    messages: MESSAGES,
+    showToast,
+  });
 
   const filtered = filterMateri(rows, query, levelFilter, statusFilter);
-  const publishedCount = rows.filter((m) => m.is_published).length;
-  const nextSortOrder = rows.length ? Math.max(...rows.map((m) => m.sort_order)) + 1 : 1;
-
-  // Quick publish/unpublish dari list — tanpa membuka form.
-  async function togglePublish(m: Materi) {
-    if (togglingId) return;
-    setTogglingId(m.id);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("materi")
-        .update({ is_published: !m.is_published })
-        .eq("id", m.id);
-      if (error) throw error;
-      showToast(m.is_published ? "Materi dijadikan draft." : "Materi dipublikasikan.", "success");
-      await load();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Gagal mengubah status.", "error");
-    } finally {
-      setTogglingId(null);
-    }
-  }
-
-  // Hapus: DB record dulu; storage menyusul hanya jika DB sukses (logic existing).
-  async function confirmDelete() {
-    if (!deleteTarget || deleting) return;
-    setDeleting(true);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.from("materi").delete().eq("id", deleteTarget.id);
-      if (error) throw error;
-      if (deleteTarget.image_url) {
-        const ok = await deleteStoredImageByUrl(deleteTarget.image_url);
-        if (!ok)
-          console.error(
-            "[MateriAdmin] gambar materi gagal dihapus (perlu retry manual):",
-            deleteTarget.image_url,
-          );
-      }
-      showToast("Materi dihapus.", "success");
-      setDeleteTarget(null);
-      await load();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Gagal menghapus materi.", "error");
-    } finally {
-      setDeleting(false);
-    }
-  }
-
-  function openAdd() {
-    setEditing(null);
-    setModalOpen(true);
-  }
-
-  function openEdit(m: Materi) {
-    setEditing(m);
-    setModalOpen(true);
-  }
 
   return (
     <div className="mx-auto w-full max-w-6xl">
@@ -233,10 +181,10 @@ export function MateriAdmin() {
         open={modalOpen}
         editing={editing}
         nextSortOrder={nextSortOrder}
-        onClose={() => setModalOpen(false)}
+        onClose={closeModal}
         onSaved={() => {
-          setModalOpen(false);
-          void load();
+          closeModal();
+          void reload();
         }}
         showToast={showToast}
       />

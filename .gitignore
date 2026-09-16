@@ -23,3 +23,7 @@ Thumbs.db
 KANUM legacy/
 workspace-tree.txt
 .tmp-admin-token
+
+# Harness/scratch runtime (berisi kredensial E2E & log dev server) —
+# JANGAN pernah di-commit.
+.freebuff/

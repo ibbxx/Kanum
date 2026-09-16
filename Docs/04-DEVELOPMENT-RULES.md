@@ -1,5 +1,10 @@
 # 04 — DEVELOPMENT RULES & STANDARDS
 
+> **⚠️ STATUS: SEBAGIAN SUDAH TIDAK BERLAKU.** Aturan stack yang menyebut
+> MySQL/Prisma tidak berlaku — proyek memakai **Supabase (Postgres/Auth/Storage)**
+> melalui `lib/supabase/*` dan `lib/image/storage.ts`. Aturan umum (naming,
+> struktur, kualitas) tetap jadi acuan.
+
 **Produk:** Platform Pembelajaran Matematika Berbasis Etnomatematika Ammatoa Kajang
 **Versi Dokumen:** 1.0 (MVP Planning)
 **Tujuan:** Standar wajib bagi siapa pun (termasuk kontributor baru/masa depan) yang mengembangkan kode di proyek ini.

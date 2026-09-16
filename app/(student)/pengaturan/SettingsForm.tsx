@@ -42,10 +42,15 @@ export function SettingsForm() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    if (!user) {
+      setSaving(false);
+      showToast("Sesi tidak ditemukan. Silakan login ulang.", "error");
+      return;
+    }
     const { error } = await supabase
       .from("profiles")
       .update({ full_name: name.trim(), class_name: klass.trim() })
-      .eq("id", user?.id);
+      .eq("id", user.id);
     setSaving(false);
     if (error) showToast("Gagal menyimpan: " + error.message, "error");
     else showToast("Profil berhasil disimpan!");

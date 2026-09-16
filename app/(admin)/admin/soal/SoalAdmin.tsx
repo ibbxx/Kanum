@@ -58,7 +58,7 @@ export function SoalAdmin({
       .from("exercises")
       .select("id, title, is_published")
       .order("created_at", { ascending: false });
-    setExercises((data || []) as ExerciseOpt[]);
+    setExercises(data || []);
   }
 
   async function loadQuestions(id: string) {
@@ -69,7 +69,7 @@ export function SoalAdmin({
       .eq("exercise_id", id)
       .order("sort_order");
     if (error) showToast(error.message, "error");
-    else setQuestions((data || []) as unknown as QuestionRow[]);
+    else setQuestions(data || []);
   }
 
   useEffect(() => {

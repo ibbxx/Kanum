@@ -1,21 +1,7 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile, getUserIdFromCookies } from "@/lib/profile";
 import { formatDateId } from "@/lib/utils";
-
-type ProgressRow = {
-  best_score: number;
-  is_completed: boolean;
-};
-
-type AttemptRow = {
-  id: string;
-  score: number | null;
-  correct_count: number;
-  wrong_count: number;
-  started_at: string;
-  finished_at: string | null;
-  exercises: { title: string } | null;
-};
 
 export default async function LaporanPage() {
   const supabase = await createClient();
@@ -23,7 +9,10 @@ export default async function LaporanPage() {
   // sesi & role via getProfile()). Kedua query tetap dijaga RLS.
   // Fallback getProfile() (di-cache per request) bila cookie tak terbaca —
   // jalur data identik dengan perilaku lama di semua kondisi.
-  const studentId = (await getUserIdFromCookies()) ?? (await getProfile())?.id ?? "";
+  const studentId = (await getUserIdFromCookies()) ?? (await getProfile())?.id;
+  // Jaring pengaman (layout siswa sudah menjamin). Tanpa ini filter
+  // `student_id` bisa terkirim kosong dan query gagal di Postgres.
+  if (!studentId) redirect("/login");
 
   // Kedua query independen → paralel (dulu: sequential).
   const [progRes, attemptsRes] = await Promise.all([
@@ -39,16 +28,14 @@ export default async function LaporanPage() {
       .limit(20),
   ]);
 
-  const list = (progRes.data || []) as unknown as ProgressRow[];
+  const list = progRes.data || [];
   const completed = list.filter((p) => p.is_completed).length;
   const avg =
     list.length > 0
       ? Math.round(list.reduce((s, p) => s + Number(p.best_score), 0) / list.length)
       : 0;
 
-  const attempts = attemptsRes.data;
-
-  const rows = (attempts || []) as unknown as AttemptRow[];
+  const rows = attemptsRes.data || [];
 
   return (
     <div>

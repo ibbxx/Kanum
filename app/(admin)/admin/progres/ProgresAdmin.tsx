@@ -50,9 +50,9 @@ export function ProgresAdmin() {
         supabase.from("student_progress").select("*, exercises(title, passing_score)"),
         supabase.from("exercises").select("id, title").order("title"),
       ]);
-      setStudents((st || []) as Student[]);
-      setProgress((pr || []) as Progress[]);
-      setExercises((ex || []) as { id: string; title: string }[]);
+      setStudents(st || []);
+      setProgress(pr || []);
+      setExercises(ex || []);
     })();
   }, []);
 
@@ -74,8 +74,8 @@ export function ProgresAdmin() {
     ]);
     setDetail({
       student: s,
-      progs: (progs || []) as Progress[],
-      attempts: (attempts || []) as unknown as Attempt[],
+      progs: progs || [],
+      attempts: attempts || [],
     });
   }
 
@@ -85,7 +85,7 @@ export function ProgresAdmin() {
       .from("student_answers")
       .select("is_correct, points_earned, questions(question, explanation, points), question_options(option_text)")
       .eq("attempt_id", attemptId);
-    setAnswers({ title, rows: (data || []) as unknown as Answer[] });
+    setAnswers({ title, rows: data || [] });
   }
 
   return (

@@ -82,10 +82,10 @@ async function fetchOwnProfile(
     .select(PROFILE_COLUMNS)
     .eq("id", userId)
     .maybeSingle();
-  if (data) return data as Profile;
+  if (data) return data;
 
   const { data: ensured } = await supabase.rpc("ensure_own_profile");
-  if (ensured) return ensured as Profile;
+  if (ensured) return ensured;
   return null;
 }
 

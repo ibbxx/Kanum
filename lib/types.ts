@@ -1,72 +1,40 @@
-export type UserRole = "admin" | "teacher" | "student";
+import type { Database } from "@/types/database";
 
-/** Status verifikasi akun (profiles.status). */
-export type AccountStatus = "pending" | "approved" | "rejected";
+type Tables = Database["public"]["Tables"];
+
+export type UserRole = "admin" | "teacher" | "student";
 
 /** Keadaan akses efektif: admin selalu aktif, role lain ikut status. */
 export type AccessState = "approved" | "pending" | "rejected";
 
-export type Profile = {
-  id: string;
-  full_name: string;
-  email: string;
-  class_name: string;
-  role: UserRole;
-  status: AccountStatus;
-  avatar_url: string | null;
-};
+/**
+ * Tipe entitas di bawah ini DITURUNKAN dari `types/database.ts` (hasil
+ * generate skema Supabase), bukan ditulis tangan. Definisi lama menulis
+ * ulang kolom + union enum (`level`, `difficulty`, `role`, `status`) yang
+ * tidak cocok dengan `string` dari database, sehingga pemanggil terpaksa
+ * `as`. Dengan sumber tunggal ini, cast hasil query hilang.
+ */
 
-export type Materi = {
-  id: string;
-  title: string;
-  chapter_number: number;
-  level: "dasar" | "menengah" | "lanjut";
-  description: string;
-  duration_minutes: number;
-  image_url: string | null;
-  content_html: string;
-  is_published: boolean;
-  sort_order: number;
-};
+/** Kolom yang benar-benar di-select oleh `lib/profile.ts`. */
+export type Profile = Pick<
+  Tables["profiles"]["Row"],
+  "id" | "full_name" | "email" | "class_name" | "role" | "status" | "avatar_url"
+>;
 
-export type Budaya = {
-  id: string;
-  title: string;
-  topic_key: string;
-  category: string;
-  description: string;
-  image_url: string | null;
-  content_html: string;
-  is_published: boolean;
-  sort_order: number;
-};
+export type Materi = Tables["materi"]["Row"];
 
-export type Exercise = {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  difficulty: "Mudah" | "Sedang" | "Sulit";
-  time_limit: number;
-  max_attempts: number;
-  passing_score: number;
-  is_published: boolean;
-  sort_order: number;
-  created_at?: string;
-  questions?: { id: string }[];
-};
+export type Budaya = Tables["budaya"]["Row"];
 
-export type StudentProgress = {
-  id: string;
-  student_id: string;
-  exercise_id: string;
-  attempts_count: number;
-  best_score: number;
-  last_score: number;
-  is_completed: boolean;
-};
+export type Exercise = Tables["exercises"]["Row"];
 
-export type QuizOption = {
+export type StudentProgress = Tables["student_progress"]["Row"];
+
+/* ── Kontrak JSON dari RPC quiz ───────────────────────────────────────────
+   `get_student_quiz` / `submit_student_quiz` mengembalikan JSONB, jadi
+   bentuknya memang tidak bisa dibaca dari skema — tipe ini tetap ditulis
+   tangan dan sengaja dipakai sebagai target satu kali cast di QuizPlayer. */
+
+type QuizOption = {
   id: string;
   option_text: string;
   sort_order: number;

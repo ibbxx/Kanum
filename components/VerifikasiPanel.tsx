@@ -41,7 +41,7 @@ export function VerifikasiPanel() {
       showToast("Gagal memuat pengajuan: " + error.message, "error");
       return;
     }
-    setRows((data || []) as Pengajuan[]);
+    setRows(data || []);
   }, [showToast]);
 
   useEffect(() => {

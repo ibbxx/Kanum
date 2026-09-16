@@ -1,5 +1,9 @@
 # 05 — IMPLEMENTATION ROADMAP
 
+> **⚠️ STATUS: CATATAN PERENCANAAN.** Roadmap ini disusun sebelum implementasi;
+> sebagian phase sudah selesai dan sebagian arah teknis berubah (Supabase, bukan
+> MySQL/Prisma). Untuk status nyata, lihat rute di `app/` dan `README.md`.
+
 **Produk:** Platform Pembelajaran Matematika Berbasis Etnomatematika Ammatoa Kajang
 **Versi Dokumen:** 1.0 (MVP Planning)
 **Total Phase:** 13

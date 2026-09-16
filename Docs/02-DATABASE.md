@@ -1,5 +1,10 @@
 # 02 — DATABASE PLANNING DOCUMENT
 
+> **⚠️ STATUS: DOKUMEN PERENCANAAN MVP (v1.0) — SUDAH TIDAK BERLAKU.**
+> Database produksi adalah **Supabase Postgres** (bukan MySQL 8), diakses lewat
+> `@supabase/supabase-js` (bukan Prisma). Skema, RLS, dan fungsi yang benar-benar
+> dipakai ada di `Supabase/*.sql`; ringkasannya di [`Supabase/README.md`](../Supabase/README.md).
+
 **Produk:** Platform Pembelajaran Matematika Berbasis Etnomatematika Ammatoa Kajang
 **Versi Dokumen:** 1.0 (MVP Planning)
 **Database Engine:** MySQL 8

@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { homePathForAccess, resolveAccess } from "@/lib/auth";
 
 /**
  * Gate setelah Google OAuth dari halaman DAFTAR.

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/Icon";
 import { SmartImage } from "@/components/SmartImage";
-import type { Budaya } from "@/lib/types";
 
 export default async function BudayaPage() {
   const supabase = await createClient();
@@ -13,11 +12,15 @@ export default async function BudayaPage() {
     .eq("is_published", true)
     .order("sort_order");
 
-  const items = (data || []) as Budaya[];
+  const items = data || [];
   const featured = items.find((b) => b.topic_key === "history") || items[0];
 
   return (
-    <div className="relative">
+    // overflow-x-clip: mask budaya sengaja "bleed" keluar padding (-inset-x),
+    // dan tanpa clip itu halaman bisa scroll horizontal beberapa piksel.
+    // clip (bukan hidden) tidak membuat scroll container — header sticky di
+    // StudentShell tetap berperilaku normal.
+    <div className="relative overflow-x-clip">
       {/* Background Cultural Pattern Mask */}
       <div className="cultural-mask absolute -inset-x-4 -inset-y-6 sm:-inset-x-8 pointer-events-none opacity-30 -z-10" />
 

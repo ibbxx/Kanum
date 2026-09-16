@@ -30,8 +30,8 @@ export function KelasGuru() {
       showToast("Gagal memuat kelas: " + error.message, "error");
       return;
     }
-    setKelasList((data || []) as Kelas[]);
-    setActiveId((prev) => prev ?? (data as Kelas[] | null)?.[0]?.id ?? null);
+    setKelasList(data || []);
+    setActiveId((prev) => prev ?? data?.[0]?.id ?? null);
   }
 
   async function loadAnggota(classId: string) {
@@ -45,7 +45,7 @@ export function KelasGuru() {
       showToast("Gagal memuat anggota: " + error.message, "error");
       return;
     }
-    setAnggota((data || []) as unknown as Anggota[]);
+    setAnggota(data || []);
   }
 
   useEffect(() => {
@@ -66,9 +66,14 @@ export function KelasGuru() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    if (!user) {
+      setLoading(false);
+      showToast("Sesi tidak ditemukan. Silakan login ulang.", "error");
+      return;
+    }
     const { error } = await supabase
       .from("classes")
-      .insert({ name: namaKelas.trim(), teacher_id: user?.id });
+      .insert({ name: namaKelas.trim(), teacher_id: user.id });
     setLoading(false);
     if (error) {
       showToast("Gagal membuat kelas: " + error.message, "error");

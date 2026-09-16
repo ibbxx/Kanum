@@ -13,7 +13,20 @@ const labels: Record<string, string> = {
   lanjut: "LANJUT",
 };
 
-export function MateriGrid({ items }: { items: Materi[] }) {
+/** Kolom yang di-select halaman `/materi` — tanpa content_html (artikel
+ *  penuh hanya diambil di halaman detail). */
+type MateriCard = Pick<
+  Materi,
+  | "id"
+  | "title"
+  | "chapter_number"
+  | "level"
+  | "description"
+  | "duration_minutes"
+  | "image_url"
+>;
+
+export function MateriGrid({ items }: { items: MateriCard[] }) {
   const [level, setLevel] = useState("semua");
   const [q, setQ] = useState("");
 

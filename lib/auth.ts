@@ -1,8 +1,8 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AccessState, UserRole } from "@/lib/types";
+import type { Database } from "@/types/database";
 
-type ProfileRow = { role?: string | null; status?: string | null };
-
-export function homePathForRole(
+function homePathForRole(
   role?: string | null
 ): "/admin" | "/guru" | "/dashboard" {
   if (role === "admin") return "/admin";
@@ -16,7 +16,7 @@ export function homePathForRole(
  * - role lain mengikuti profiles.status
  * Requested role ≠ approved role: role hanya dipakai setelah approved.
  */
-export function accessStateFor(
+function accessStateFor(
   role?: string | null,
   status?: string | null
 ): AccessState {
@@ -40,26 +40,22 @@ export function homePathForAccess(
  * profil satu-satunya adalah trigger handle_new_user saat pendaftaran).
  */
 export async function resolveAccess(
-  supabase: {
-    from: (table: string) => unknown;
-    rpc: (fn: string, args?: Record<string, unknown>) => PromiseLike<{ data: unknown }>;
-  },
+  supabase: SupabaseClient<Database>,
   userId: string
 ): Promise<{
   role: UserRole;
   status: "pending" | "approved" | "rejected";
   access: AccessState;
+  /**
+   * true = TIDAK ADA baris profiles untuk user ini. Dibedakan dari
+   * "baris ada tapi role/status kosong" karena artinya berbeda untuk
+   * pemanggil: profil hilang = sesi yatim (akun sudah dihapus), sementara
+   * role/status kosong = akun ada dan masih bisa dipulihkan.
+   */
+  missing: boolean;
 }> {
-  const query = supabase.from("profiles") as {
-    select: (columns: string) => {
-      eq: (
-        column: string,
-        value: string
-      ) => { maybeSingle: () => Promise<{ data: ProfileRow | null }> };
-    };
-  };
-
-  const { data: profile } = await query
+  const { data: profile } = await supabase
+    .from("profiles")
     .select("role, status")
     .eq("id", userId)
     .maybeSingle();
@@ -76,5 +72,6 @@ export async function resolveAccess(
     role: effectiveRole,
     status: effectiveStatus,
     access: accessStateFor(effectiveRole, effectiveStatus),
+    missing: profile === null,
   };
 }
