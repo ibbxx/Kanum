@@ -1,31 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/Toast";
 import { Icon } from "@/components/Icon";
 import type { Materi } from "@/lib/types";
-import { ImageValidationError } from "@/lib/image/compressImage";
+import { deleteStoredImageByUrl } from "@/lib/image/storage";
+import { decorateCaptions, sanitizeHtml } from "@/lib/sanitize-html";
+import MateriFormModal from "@/components/MateriFormModal";
 import {
-  deleteStorageObject,
-  deleteStoredImageByUrl,
-  resolveStorageRef,
-  uploadImageCompressed,
-  type StorageRef,
-} from "@/lib/image/storage";
-
-const empty = {
-  id: "",
-  title: "",
-  chapter_number: 1,
-  level: "dasar" as Materi["level"],
-  description: "",
-  duration_minutes: 30,
-  sort_order: 0,
-  image_url: "",
-  content_html: "",
-  is_published: false,
-};
+  ActionButton,
+  CardActionButton,
+  CardCover,
+  ConfirmDialog,
+  EmptyState,
+  FilterSelect,
+  ListCard,
+  ModalShell,
+  ResultCount,
+  SearchInput,
+  StatusBadge,
+} from "@/components/admin/ui";
 
 // Nama tampilan level — konsisten dengan halaman materi siswa.
 const LEVEL_LABEL: Record<Materi["level"], string> = {
@@ -34,18 +29,21 @@ const LEVEL_LABEL: Record<Materi["level"], string> = {
   lanjut: "Lanjut",
 };
 
-// Filter daftar materi di sisi klien (referensi behavior: legacy
-// filterMateri — search judul, level, status publikasi). Tanpa query
-// tambahan ke Supabase; sumber data tetap satu kali fetch saat load().
+// Filter daftar materi di sisi klien (behavior legacy dipertahankan):
+// search judul + deskripsi, level, status publikasi — tanpa query tambahan
+// ke Supabase; sumber data tetap satu kali fetch.
 function filterMateri(
   rows: Materi[],
   q: string,
   level: string,
-  status: "" | "true" | "false"
+  status: "" | "true" | "false",
 ): Materi[] {
   const query = q.trim().toLowerCase();
   return rows.filter((m) => {
-    const matchQ = !query || m.title.toLowerCase().includes(query);
+    const matchQ =
+      !query ||
+      m.title.toLowerCase().includes(query) ||
+      (m.description ?? "").toLowerCase().includes(query);
     const matchL = !level || m.level === level;
     const matchS = status === "" || String(m.is_published) === status;
     return matchQ && matchL && matchS;
@@ -55,287 +53,310 @@ function filterMateri(
 export function MateriAdmin() {
   const { showToast } = useToast();
   const [rows, setRows] = useState<Materi[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | "true" | "false">("");
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState(empty);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  // image_url saat form dibuka — acuan file lama yang boleh dihapus dari
-  // storage HANYA setelah DB berhasil diperbarui.
-  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
 
-  async function load() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<Materi | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Materi | null>(null);
+  const [previewTarget, setPreviewTarget] = useState<Materi | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  // Fetch materi — HANYA dipanggil dari useEffect (setelah mount).
+  // Jangan pernah memanggil load() langsung di body component:
+  // setRows/setLoaded saat render memicu warning "Can't perform a React
+  // state update on a component that hasn't mounted yet" (React 19).
+  const load = useCallback(async () => {
     const supabase = createClient();
     const { data, error } = await supabase.from("materi").select("*").order("sort_order");
     if (error) showToast(error.message, "error");
     else setRows((data || []) as Materi[]);
-  }
-  useEffect(() => {
-    void load();
+    setLoaded(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function save() {
-    if (!form.title.trim()) {
-      showToast("Judul wajib diisi", "error");
-      return;
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const filtered = filterMateri(rows, query, levelFilter, statusFilter);
+  const publishedCount = rows.filter((m) => m.is_published).length;
+  const nextSortOrder = rows.length ? Math.max(...rows.map((m) => m.sort_order)) + 1 : 1;
+
+  // Quick publish/unpublish dari list — tanpa membuka form.
+  async function togglePublish(m: Materi) {
+    if (togglingId) return;
+    setTogglingId(m.id);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("materi")
+        .update({ is_published: !m.is_published })
+        .eq("id", m.id);
+      if (error) throw error;
+      showToast(m.is_published ? "Materi dijadikan draft." : "Materi dipublikasikan.", "success");
+      await load();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Gagal mengubah status.", "error");
+    } finally {
+      setTogglingId(null);
     }
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const rowId = form.id || crypto.randomUUID();
+  }
 
-    let imageUrl = form.image_url || null;
-    let newlyUploaded: StorageRef | null = null;
-    const oldImageRefs: StorageRef[] = [];
-    const originalRef = resolveStorageRef(originalImageUrl);
-
-    if (imageFile) {
-      // URUTAN WAJIB: kompres lokal → upload baru dulu → baru ganti referensi DB.
-      try {
-        const uploaded = await uploadImageCompressed(imageFile, {
-          bucket: "materi-images",
-          userId: user.id,
-          entityKey: rowId,
-        });
-        imageUrl = uploaded.publicUrl;
-        newlyUploaded = { bucket: uploaded.bucket, path: uploaded.path };
-      } catch (err) {
-        if (err instanceof ImageValidationError) showToast(err.message, "error");
-        else {
-          showToast("Gambar gagal diunggah. Silakan coba lagi.", "error");
-          console.error("[MateriAdmin] upload gambar gagal:", err);
-        }
-        return;
+  // Hapus: DB record dulu; storage menyusul hanya jika DB sukses (logic existing).
+  async function confirmDelete() {
+    if (!deleteTarget || deleting) return;
+    setDeleting(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from("materi").delete().eq("id", deleteTarget.id);
+      if (error) throw error;
+      if (deleteTarget.image_url) {
+        const ok = await deleteStoredImageByUrl(deleteTarget.image_url);
+        if (!ok)
+          console.error(
+            "[MateriAdmin] gambar materi gagal dihapus (perlu retry manual):",
+            deleteTarget.image_url,
+          );
       }
+      showToast("Materi dihapus.", "success");
+      setDeleteTarget(null);
+      await load();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Gagal menghapus materi.", "error");
+    } finally {
+      setDeleting(false);
     }
-    if (originalRef && (!newlyUploaded || newlyUploaded.path !== originalRef.path)) {
-      // File lama tak lagi direferensikan (diganti file baru / URL diubah).
-      oldImageRefs.push(originalRef);
-    }
+  }
 
-    const payload = {
-      title: form.title.trim(),
-      chapter_number: Number(form.chapter_number) || 0,
-      level: form.level,
-      description: form.description,
-      duration_minutes: Number(form.duration_minutes) || 30,
-      sort_order: Number(form.sort_order) || 0,
-      image_url: imageUrl,
-      content_html: form.content_html,
-      is_published: form.is_published,
-    };
-    let error;
-    if (form.id) ({ error } = await supabase.from("materi").update(payload).eq("id", form.id));
-    else ({ error } = await supabase.from("materi").insert({ ...payload, id: rowId, created_by: user.id }));
+  function openAdd() {
+    setEditing(null);
+    setModalOpen(true);
+  }
 
-    if (error) {
-      // Orphan protection: upload sukses tapi DB gagal → hapus file baru.
-      if (newlyUploaded) {
-        const ok = await deleteStorageObject(newlyUploaded);
-        if (!ok) console.error("[MateriAdmin] orphan file perlu dibersihkan manual:", newlyUploaded);
-      }
-      showToast(error.message, "error");
-      return;
-    }
-
-    // DB sudah berhasil → baru aman menghapus file lama (jika ada).
-    for (const ref of oldImageRefs) {
-      const ok = await deleteStorageObject(ref);
-      if (!ok) console.error("[MateriAdmin] gambar lama gagal dihapus (perlu retry manual):", ref);
-    }
-
-    showToast("Materi disimpan");
-    setOpen(false);
-    setImageFile(null);
-    await load();
+  function openEdit(m: Materi) {
+    setEditing(m);
+    setModalOpen(true);
   }
 
   return (
-    <div>
-      <button
-        type="button"
-        className="mb-4 bg-primary text-on-primary px-4 py-2 rounded-xl font-bold inline-flex items-center gap-1"
-        onClick={() => {
-          setForm(empty);
-          setImageFile(null);
-          setOriginalImageUrl(null);
-          setOpen(true);
-        }}
-        data-testid="add-materi"
-      >
-        <Icon name="add" /> Tambah Materi
-      </button>
-      <div className="mb-3 flex flex-wrap gap-2">
-        <input
-          className="px-3 py-2 border border-outline-variant rounded-xl bg-white text-sm max-w-64"
-          placeholder="Cari materi..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <select
-          className="px-3 py-2 border border-outline-variant rounded-xl bg-white text-sm"
-          value={levelFilter}
-          onChange={(e) => setLevelFilter(e.target.value)}
+    <div className="mx-auto w-full max-w-6xl">
+      {/* ── Header ── */}
+      <div className="flex flex-wrap items-start justify-between gap-3 sm:items-center">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-bold text-on-surface">Kelola Materi</h1>
+          <p className="mt-1 text-sm text-on-surface-variant">
+            Kelola, edit, dan publikasikan materi pembelajaran.
+          </p>
+        </div>
+        <ActionButton
+          variant="primary"
+          onClick={openAdd}
+          data-testid="add-materi"
+          className="w-full sm:w-auto"
         >
+          <Icon name="add" className="text-[20px] leading-none" />
+          Tambah Materi
+        </ActionButton>
+      </div>
+
+      {/* ── Toolbar: search + filter ── */}
+      <div className="mt-5 flex flex-wrap items-center gap-2">
+        <SearchInput
+          value={query}
+          onChange={setQuery}
+          placeholder="Cari materi berdasarkan judul..."
+          ariaLabel="Cari materi"
+        />
+        <FilterSelect value={levelFilter} onChange={setLevelFilter} ariaLabel="Filter level">
           <option value="">Semua Level</option>
           <option value="dasar">Dasar</option>
           <option value="menengah">Menengah</option>
           <option value="lanjut">Lanjut</option>
-        </select>
-        <select
-          className="px-3 py-2 border border-outline-variant rounded-xl bg-white text-sm"
+        </FilterSelect>
+        <FilterSelect
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as "" | "true" | "false")}
+          onChange={(v) => setStatusFilter(v as "" | "true" | "false")}
+          ariaLabel="Filter status"
         >
           <option value="">Semua Status</option>
-          <option value="true">Dipublikasikan</option>
+          <option value="true">Published</option>
           <option value="false">Draft</option>
-        </select>
+        </FilterSelect>
+        <ResultCount>
+          {filtered.length} dari {rows.length} materi · {publishedCount} published
+        </ResultCount>
       </div>
-      <div className="bg-white border border-outline-variant rounded-2xl overflow-x-auto">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Bab</th>
-              <th>Judul</th>
-              <th>Level</th>
-              <th>Durasi</th>
-              <th>Status</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filterMateri(rows, query, levelFilter, statusFilter).map((m) => (
-              <tr key={m.id}>
-                <td className="text-center font-bold">{m.chapter_number || "–"}</td>
-                <td>
-                  <strong>{m.title}</strong>
-                  {m.description ? (
-                    <span className="block text-xs text-on-surface-variant">
-                      {m.description.length > 60 ? m.description.slice(0, 60) + "..." : m.description}
-                    </span>
-                  ) : null}
-                </td>
-                <td>{LEVEL_LABEL[m.level] ?? m.level}</td>
-                <td>{m.duration_minutes} min</td>
-                <td>{m.is_published ? "Publik" : "Draft"}</td>
-                <td className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setForm({
-                        id: m.id,
-                        title: m.title,
-                        chapter_number: m.chapter_number,
-                        level: m.level,
-                        description: m.description,
-                        duration_minutes: m.duration_minutes,
-                        sort_order: m.sort_order,
-                        image_url: m.image_url || "",
-                        content_html: m.content_html,
-                        is_published: m.is_published,
-                      });
-                      setImageFile(null);
-                      setOriginalImageUrl(m.image_url || null);
-                      setOpen(true);
-                    }}
-                  >
-                    <Icon name="edit" />
-                  </button>
-                  <button type="button" onClick={() => setDeleteId(m.id)}>
-                    <Icon name="delete" className="text-error" />
-                  </button>
-                  <button
-                    type="button"
-                    className="text-xs font-bold"
-                    onClick={async () => {
-                      const supabase = createClient();
-                      await supabase.from("materi").update({ is_published: !m.is_published }).eq("id", m.id);
-                      await load();
-                    }}
-                  >
-                    {m.is_published ? "Nonaktif" : "Publish"}
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="text-center py-8 text-on-surface-variant">
-                  Belum ada materi. Klik "Tambah Materi" untuk membuat.
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </div>
-      {open ? (
-        <div className="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center p-4 overflow-y-auto" onClick={() => setOpen(false)}>
-          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl my-8 space-y-3" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-bold">{form.id ? "Edit Materi" : "Tambah Materi"}</h3>
-            <input className="w-full px-3 py-2 border rounded-xl" placeholder="Judul" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-            <div className="grid grid-cols-2 gap-3">
-              <input type="number" className="px-3 py-2 border rounded-xl" placeholder="Bab" value={form.chapter_number} onChange={(e) => setForm({ ...form, chapter_number: Number(e.target.value) })} />
-              <select className="px-3 py-2 border rounded-xl" value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value as Materi["level"] })}>
-                <option value="dasar">dasar</option>
-                <option value="menengah">menengah</option>
-                <option value="lanjut">lanjut</option>
-              </select>
-              <input type="number" className="px-3 py-2 border rounded-xl" placeholder="Durasi" value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })} />
-              <input type="number" className="px-3 py-2 border rounded-xl" placeholder="Urutan" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })} />
+
+      {/* ── Daftar materi ── */}
+      {loaded && rows.length === 0 ? (
+        <EmptyState
+          icon="menu_book"
+          title="Belum ada materi"
+          desc="Buat materi pertama untuk mulai mengisi pembelajaran."
+          action={
+            <ActionButton variant="primary" onClick={openAdd} className="mt-4">
+              <Icon name="add" className="text-[20px] leading-none" />
+              Tambah Materi
+            </ActionButton>
+          }
+        />
+      ) : loaded && filtered.length === 0 ? (
+        <EmptyState
+          icon="search_off"
+          title="Tidak ada materi yang cocok"
+          desc="Coba kata kunci lain atau ubah filter."
+        />
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {filtered.map((m, i) => (
+            <li key={m.id}>
+              <MateriCard
+                materi={m}
+                index={i + 1}
+                busy={togglingId === m.id}
+                onEdit={() => openEdit(m)}
+                onPreview={() => setPreviewTarget(m)}
+                onTogglePublish={() => void togglePublish(m)}
+                onDelete={() => setDeleteTarget(m)}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* ── Modal form (WYSIWYG) ── */}
+      <MateriFormModal
+        open={modalOpen}
+        editing={editing}
+        nextSortOrder={nextSortOrder}
+        onClose={() => setModalOpen(false)}
+        onSaved={() => {
+          setModalOpen(false);
+          void load();
+        }}
+        showToast={showToast}
+      />
+
+      {/* ── Pratinjau materi (read-only, tanpa keluar halaman admin) ── */}
+      {previewTarget ? (
+        <ModalShell
+          eyebrow="Pratinjau materi"
+          title={previewTarget.title}
+          maxWidth="sm:max-w-3xl"
+          closeLabel="Tutup pratinjau"
+          onRequestClose={() => setPreviewTarget(null)}
+          testId="materi-preview"
+          footer={
+            <div className="flex shrink-0 justify-end border-t border-outline-variant px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
+              <ActionButton onClick={() => setPreviewTarget(null)}>Tutup</ActionButton>
             </div>
-            <textarea className="w-full px-3 py-2 border rounded-xl" placeholder="Deskripsi" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
-            <input className="w-full px-3 py-2 border rounded-xl" placeholder="URL gambar (opsional, untuk gambar eksternal)" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
-            <textarea className="w-full px-3 py-2 border rounded-xl min-h-40 font-mono text-sm" placeholder="Konten HTML" value={form.content_html} onChange={(e) => setForm({ ...form, content_html: e.target.value })} />
-            <select className="w-full px-3 py-2 border rounded-xl" value={String(form.is_published)} onChange={(e) => setForm({ ...form, is_published: e.target.value === "true" })}>
-              <option value="false">Draft</option>
-              <option value="true">Dipublikasikan</option>
-            </select>
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setOpen(false)}>Batal</button>
-              <button type="button" onClick={() => void save()} className="bg-primary text-on-primary px-4 py-2 rounded-xl font-bold">Simpan</button>
-            </div>
+          }
+        >
+          <div className="px-5 py-4 sm:px-6">
+            {previewTarget.content_html ? (
+              <div
+                className="prose-kanum"
+                // HTML sudah lolos sanitizer saat disimpan; disanitasi ulang
+                // agar baris legacy pun aman dirender.
+                dangerouslySetInnerHTML={{
+                  __html: decorateCaptions(sanitizeHtml(previewTarget.content_html)),
+                }}
+              />
+            ) : (
+              <p className="text-sm italic text-on-surface-variant">Konten materi belum diisi.</p>
+            )}
           </div>
-        </div>
+        </ModalShell>
       ) : null}
-      {deleteId ? (
-        <div className="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center">
-          <div className="bg-white p-6 rounded-2xl">
-            <p className="mb-4">
-              Hapus materi <strong>{rows.find((m) => m.id === deleteId)?.title}</strong>?
-            </p>
-            <button type="button" className="mr-2" onClick={() => setDeleteId(null)}>Batal</button>
-            <button
-              type="button"
-              className="bg-error text-white px-4 py-2 rounded-xl"
-              onClick={async () => {
-                // DB record dulu; storage menyusul hanya jika DB sukses.
-                const supabase = createClient();
-                const { error } = await supabase.from("materi").delete().eq("id", deleteId);
-                if (error) {
-                  showToast(error.message, "error");
-                  setDeleteId(null);
-                  return;
-                }
-                const row = rows.find((m) => m.id === deleteId);
-                if (row?.image_url) {
-                  const ok = await deleteStoredImageByUrl(row.image_url);
-                  if (!ok) console.error("[MateriAdmin] gambar materi gagal dihapus (perlu retry manual):", row.image_url);
-                }
-                setDeleteId(null);
-                await load();
-              }}
-            >
-              Hapus
-            </button>
-          </div>
-        </div>
+
+      {/* ── Konfirmasi hapus ── */}
+      {deleteTarget ? (
+        <ConfirmDialog
+          icon="delete"
+          title="Hapus Materi?"
+          message={
+            <>
+              <strong className="text-on-surface">{deleteTarget.title}</strong> akan dihapus secara
+              permanen. Tindakan ini tidak dapat dibatalkan.
+            </>
+          }
+          confirmLabel="Hapus"
+          busyLabel="Menghapus..."
+          busy={deleting}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => void confirmDelete()}
+        />
       ) : null}
     </div>
+  );
+}
+
+/* ── Kartu materi ── */
+
+function MateriCard({
+  materi: m,
+  index,
+  busy,
+  onEdit,
+  onPreview,
+  onTogglePublish,
+  onDelete,
+}: {
+  materi: Materi;
+  index: number;
+  busy: boolean;
+  onEdit: () => void;
+  onPreview: () => void;
+  onTogglePublish: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <ListCard
+      cover={<CardCover src={m.image_url} alt={m.title} />}
+      info={
+        <>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="text-xs font-bold text-on-surface-variant/70">#{index}</span>
+            <h3 className="truncate font-display text-sm font-bold text-on-surface sm:text-base">
+              {m.title}
+            </h3>
+            <StatusBadge published={m.is_published} />
+          </div>
+          <p className="mt-0.5 text-xs text-on-surface-variant">
+            Bab {m.chapter_number || "–"} · {LEVEL_LABEL[m.level] ?? m.level} ·{" "}
+            {m.duration_minutes} menit
+          </p>
+          {m.description ? (
+            <p className="mt-1 line-clamp-1 text-xs text-on-surface-variant/80">{m.description}</p>
+          ) : null}
+        </>
+      }
+      actions={
+        <>
+          <CardActionButton onClick={onEdit} icon="edit" label="Edit" title="Edit materi" />
+          <CardActionButton
+            onClick={onPreview}
+            icon="visibility"
+            label="Pratinjau"
+            title="Pratinjau materi"
+            tone="muted"
+          />
+          <CardActionButton
+            onClick={onTogglePublish}
+            icon={m.is_published ? "unpublish" : "publish"}
+            label={m.is_published ? "Unpublish" : "Publish"}
+            title={m.is_published ? "Jadikan draft" : "Publikasikan"}
+            tone={m.is_published ? "muted" : "primary"}
+            busy={busy}
+            disabled={busy}
+          />
+          <CardActionButton onClick={onDelete} icon="delete" label="Hapus" tone="danger" />
+        </>
+      }
+    />
   );
 }

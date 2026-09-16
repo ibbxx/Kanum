@@ -84,12 +84,17 @@ export function isImageBucket(bucket: string): bucket is ImageBucket {
  * maxBytes; the caller persists `publicUrl` and may keep `path` for deletion.
  * Throws ImageValidationError (user-friendly message) on processing failure,
  * or the raw storage error on upload failure (caller decides UX).
+ *
+ * `subfolder` (opsional) menata objek di dalam folder user, mis. "content"
+ * untuk gambar inline artikel vs cover di root: `${userId}/content/...`.
  */
 export async function uploadImageCompressed(
   file: File,
-  opts: { bucket: ImageBucket; userId: string; entityKey: string; maxBytes?: number }
+  opts: { bucket: ImageBucket; userId: string; entityKey: string; maxBytes?: number; subfolder?: string }
 ): Promise<UploadedImage> {
   const { bucket, userId, entityKey, maxBytes = IMAGE_MAX_BYTES } = opts;
+  // Hanya izinkan nama folder sederhana (hindari path traversal).
+  const subfolder = opts.subfolder && /^[a-zA-Z0-9_-]+$/.test(opts.subfolder) ? `${opts.subfolder}/` : "";
   const supabase = createClient();
 
   let compressed;
@@ -100,7 +105,7 @@ export async function uploadImageCompressed(
     throw new ImageValidationError(IMAGE_ERROR_MESSAGE);
   }
 
-  const path = `${userId}/${entityKey}-${Date.now()}.${compressed.ext}`;
+  const path = `${userId}/${subfolder}${entityKey}-${Date.now()}.${compressed.ext}`;
   const { error } = await supabase.storage.from(bucket).upload(path, compressed.file, {
     upsert: false,
     contentType: compressed.mime,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/Icon";
@@ -31,13 +32,32 @@ export function StudentShell({
   profile: Profile | null;
   children: React.ReactNode;
 }) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const name = profile?.full_name || "Siswa";
   const klass = profile?.class_name || "Kelas";
 
+  // Tutup menu mobile ketika navigasi pindah halaman
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   return (
-    <div className="min-h-screen bg-background">
-      <aside className="h-screen w-64 fixed left-0 top-0 hidden md:flex flex-col bg-white border-r border-outline-variant z-50">
+    <div className="min-h-screen bg-background relative">
+      {/* Overlay untuk Mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-50 md:hidden transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      <aside 
+        className={cn(
+          "h-screen w-64 fixed left-0 top-0 flex flex-col bg-white border-r border-outline-variant z-[60] transition-transform duration-300 md:translate-x-0",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
         <div className="flex flex-col h-full py-8 px-6">
           <div className="mb-10">
             <span className="font-headline-md text-headline-md text-primary font-bold">
@@ -77,7 +97,17 @@ export function StudentShell({
       <main className="md:ml-64 min-h-screen flex flex-col pb-24 md:pb-8">
         <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur border-b border-outline-variant">
           <div className="flex justify-between items-center w-full px-4 sm:px-gutter py-3 max-w-container-max mx-auto">
-            <p className="font-headline-sm text-primary md:hidden">KANUM</p>
+            <div className="flex items-center gap-3 md:hidden">
+              <button 
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="p-2 -ml-2 text-on-surface-variant hover:text-primary transition-colors"
+                aria-label="Open Menu"
+              >
+                <Icon name="menu" className="text-[24px]" />
+              </button>
+              <p className="font-headline-sm text-primary">KANUM</p>
+            </div>
+            <p className="font-headline-sm text-primary hidden md:block">KANUM</p>
             <div className="flex items-center gap-3 ml-auto">
               <div className="text-right hidden sm:block">
                 <p className="font-label-md text-label-md text-on-surface font-bold">

@@ -32,6 +32,14 @@ npm run dev
 
 Buka [http://localhost:3000](http://localhost:3000).
 
+> **Penting saat kerja lokal:** `npm run dev` dan `npm run build` memakai direktori
+> `.next` yang sama. Menjalankan `npm run build` ketika dev server sedang aktif
+> menghapus aset milik dev server (`/_next/static/css/app/layout.css`,
+> `/_next/static/chunks/main-app.js`, dll). Halaman yang sudah terbuka lalu
+> tampil sebagai **HTML polos tanpa CSS/JS** (404 pada asetnya) sampai dev server
+> di-restart. Jalankan `npm run build` hanya setelah dev server dimatikan; bila
+> sudah terlanjur, `rm -rf .next` lalu `npm run dev` lagi.
+
 ## Route
 
 | URL | Halaman |

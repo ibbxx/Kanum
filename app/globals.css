@@ -2,6 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Font ikon Material Symbols (self-hosted) ──
+   Sebelumnya font DAN definisi kelasnya datang dari stylesheet Google Fonts
+   di <head>. Dua bug nyata muncul dari ketergantungan itu:
+   1) Bila CDN gagal/terblokir, tidak ada `font-family` maupun sizing sama
+      sekali → setiap <Icon> jatuh ke font teks dan kode ligature-nya tampil
+      sebagai KATA mentah ("unpublish", "menu_book", "edit") → UI tampak
+      seperti HTML polos/berantakan.
+   2) Saat CDN berhasil, stylesheet-nya dimuat SETELAH CSS aplikasi sehingga
+      `font-size: 24px` miliknya mengalahkan utility `text-*` pada elemen ikon
+      → glyph selalu 24px sementara kotak elemennya 16–20px → glyph meluber
+      keluar kotak dan baris ikon jadi tidak simetris.
+   Kini fontnya lokal dan definisi kelas dimiliki sendiri di sini: tidak ada
+   lagi permintaan ke pihak ketiga, dan ukuran glyph mengikuti utility
+   Tailwind (`text-*`) pada elemen yang sama. */
+@font-face {
+  font-family: "Material Symbols Outlined";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("/fonts/material-symbols-outlined.woff2") format("woff2");
+}
+
+/* Default di :where() → spesifisitas 0, sehingga SEMUA utility Tailwind pada
+   elemen yang sama (text-*, hidden, inline-flex, …) selalu menang. */
+:where(.material-symbols-outlined) {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
   vertical-align: middle;
@@ -83,6 +124,12 @@ html:not(.icons-ready) .material-symbols-outlined {
   scrollbar-width: none;
 }
 
+/* Konten panjang tanpa spasi (URL/kode) tidak boleh memaksa halaman melebar
+   di mobile — teks dipatahkan, bukan menimbulkan scroll horizontal. */
+.prose-kanum {
+  overflow-wrap: break-word;
+}
+
 .prose-kanum h2,
 .prose-kanum h3,
 .prose-kanum h4 {
@@ -98,6 +145,244 @@ html:not(.icons-ready) .material-symbols-outlined {
 .prose-kanum img {
   border-radius: 0.75rem;
   max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0.75rem auto; /* default center, tidak overflow mobile */
+}
+.prose-kanum img[data-align="left"] {
+  margin-left: 0;
+  margin-right: auto;
+}
+.prose-kanum img[data-align="right"] {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+/* Gambar inline di editor WYSIWYG: klik → selected state */
+.materi-editor img {
+  cursor: pointer;
+}
+.materi-editor p {
+  min-height: 1.4em; /* paragraf kosong tetap terlihat/klik */
+}
+
+/* ── Wrapper gambar konten: node BLOK (paragraf terpisah) ── */
+.imgwrap {
+  display: block;
+  position: relative;
+  max-width: 100%;
+  margin: 0.75rem auto; /* default tengah (data-align=center) */
+}
+.imgwrap[data-align="left"] {
+  margin-left: 0;
+  margin-right: auto;
+}
+.imgwrap[data-align="right"] {
+  margin-left: auto;
+  margin-right: 0;
+}
+.imgwrap img {
+  display: block;
+  border-radius: 0.75rem;
+  max-width: 100%;
+  height: auto;
+}
+.imgwrap.selected {
+  outline: 3px solid #95d3ba; /* primary-fixed-dim */
+  outline-offset: 2px;
+  border-radius: 0.75rem;
+}
+/* Handle resize (sudut kanan-bawah, pointer events → mouse + touch) */
+/* Touch target diperluas via ::after transparan tanpa mengubah visual */
+.imgwrap .imgresize {
+  display: none;
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #003527;
+  border: 2px solid #ffffff;
+  cursor: nwse-resize;
+  touch-action: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  z-index: 5;
+}
+.imgwrap .imgresize::after {
+  content: "";
+  position: absolute;
+  inset: -14px; /* target sentuh efektif ~44px */
+  border-radius: 50%;
+}
+.imgwrap.selected .imgresize {
+  display: block;
+}
+/* Menu kontekstual gambar.
+   z-index 40: harus di ATAS toolbar editor yang sticky (z-30) supaya menu
+   tidak pernah tertutup saat gambar berada dekat bagian atas editor. */
+.imgwrap .imgmenu {
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  transform: translate(-50%, -100%);
+  z-index: 40;
+  display: none;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  background: #ffffff;
+  border: 1px solid #bfc9c3;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  max-width: min(92vw, 420px);
+}
+/* Di layar sempit: anchor ke kanan agar tidak terpotong kiri, dan lebih rendah
+   supaya input alt/caption tetap terlihat tanpa menutupi seluruh gambar */
+@media (max-width: 640px) {
+  .imgwrap .imgmenu {
+    top: -6px;
+    left: auto;
+    right: 0;
+    transform: none;
+    max-width: min(86vw, 340px);
+  }
+}
+.imgwrap.selected .imgmenu {
+  display: flex;
+}
+.imgwrap .imgmenu button {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #404944;
+  border-radius: 0.5rem;
+}
+.imgwrap .imgmenu button:hover {
+  background: #eef4ff;
+  color: #003527;
+}
+.imgwrap .imgmenu button.on {
+  background: #003527;
+  color: #ffffff;
+}
+.imgwrap .imgmenu input {
+  width: 140px;
+  height: 32px;
+  padding: 0 8px;
+  font-size: 13px;
+  border: 1px solid #bfc9c3;
+  border-radius: 0.5rem;
+}
+
+/* Handle crop: visualnya 16px, tapi target sentuh diperluas ke ~44px lewat
+   pseudo-element transparan (pola sama dengan .imgresize di editor). */
+.crop-handle::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 9999px;
+}
+/* Caption pratinjau di editor */
+.imgwrap .imgcap {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #404944;
+  text-align: center;
+}
+
+/* Layout posisi gambar (data-layout dari editor; sama juga di render siswa) */
+.imgwrap[data-layout="float-left"] {
+  float: left;
+  margin: 0.25rem 1rem 0.75rem 0;
+  clear: left;
+}
+.imgwrap[data-layout="float-right"] {
+  float: right;
+  margin: 0.25rem 0 0.75rem 1rem;
+  clear: right;
+}
+.imgwrap[data-layout="center"] {
+  display: block;
+  margin: 0.75rem auto;
+}
+/* Mobile: float tidak aman → fallback blok tengah, tidak keluar viewport */
+@media (max-width: 640px) {
+  .imgwrap[data-layout="float-left"],
+  .imgwrap[data-layout="float-right"] {
+    float: none;
+    display: block;
+    margin: 0.75rem auto;
+  }
+}
+
+/* Caption pada renderer (preview & siswa): img → figure/figcaption */
+.prose-kanum figure.imgfig {
+  margin: 1rem 0;
+}
+.prose-kanum figure.imgfig img {
+  margin-bottom: 0.25rem;
+}
+.prose-kanum figcaption {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #404944;
+  text-align: center;
+}
+.prose-kanum mark {
+  border-radius: 0.25rem;
+  padding: 0.05em 0.15em;
+}
+
+/* ── Layout gambar pada RENDERER (preview admin & halaman siswa) —
+      paritas dengan editor (.imgwrap di atas) ── */
+.prose-kanum img[data-layout="float-left"] {
+  float: left;
+  margin: 0.25rem 1rem 0.75rem 0;
+}
+.prose-kanum img[data-layout="float-right"] {
+  float: right;
+  margin: 0.25rem 0 0.75rem 1rem;
+}
+.prose-kanum img[data-layout="center"] {
+  display: block;
+  margin: 0.75rem auto;
+}
+.prose-kanum img[data-layout="inline"] {
+  display: inline-block;
+  margin: 0 0.25rem;
+  vertical-align: bottom;
+}
+.prose-kanum img[data-align="left"] {
+  margin-left: 0;
+  margin-right: auto;
+}
+.prose-kanum img[data-align="right"] {
+  margin-left: auto;
+  margin-right: 0;
+}
+.prose-kanum figure.imgfig[data-layout="float-left"] {
+  float: left;
+  margin: 0.25rem 1rem 0.75rem 0;
+}
+.prose-kanum figure.imgfig[data-layout="float-right"] {
+  float: right;
+  margin: 0.25rem 0 0.75rem 1rem;
+}
+/* Mobile renderer: float tidak aman → blok tengah, tanpa overflow */
+@media (max-width: 640px) {
+  .prose-kanum img[data-layout="float-left"],
+  .prose-kanum img[data-layout="float-right"],
+  .prose-kanum figure.imgfig[data-layout="float-left"],
+  .prose-kanum figure.imgfig[data-layout="float-right"] {
+    float: none;
+    display: block;
+    margin: 0.75rem auto;
+  }
 }
 
 .admin-table {
@@ -119,4 +404,63 @@ html:not(.icons-ready) .material-symbols-outlined {
   padding: 0.875rem 1rem;
   border-bottom: 1px solid #e5eeff;
   vertical-align: middle;
+}
+
+/* ── WYSIWYG editor (MateriContentEditor) ── */
+.materi-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: #707974; /* outline */
+}
+
+/* Elemen konten di editor & preview (belum ada di .prose-kanum dasar) */
+.prose-kanum ul,
+.prose-kanum ol {
+  margin: 0 0 0.75rem;
+  padding-left: 1.5rem;
+}
+.prose-kanum ul {
+  list-style: disc;
+}
+.prose-kanum ol {
+  list-style: decimal;
+}
+.prose-kanum li {
+  margin-bottom: 0.25rem;
+}
+.prose-kanum blockquote {
+  margin: 0.75rem 0;
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-left: 3px solid #95d3ba; /* primary-fixed-dim */
+  color: #404944; /* on-surface-variant */
+  font-style: italic;
+}
+.prose-kanum a {
+  color: #064e3b; /* primary-container */
+  text-decoration: underline;
+}
+.prose-kanum code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875em;
+  background: #eef4ff; /* surface-container-low */
+  border-radius: 0.375rem;
+  padding: 0.1em 0.35em;
+}
+.prose-kanum pre {
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  background: #eef4ff;
+  border-radius: 0.75rem;
+}
+.prose-kanum pre code {
+  background: none;
+  padding: 0;
+}
+.prose-kanum hr {
+  margin: 1.25rem 0;
+  border: none;
+  border-top: 1px solid #bfc9c3; /* outline-variant */
 }

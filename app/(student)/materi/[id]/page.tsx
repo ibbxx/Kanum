@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/Icon";
 import { SmartImage } from "@/components/SmartImage";
 import { levelBadge } from "@/lib/utils";
+import { decorateCaptions } from "@/lib/sanitize-html";
 import type { Materi } from "@/lib/types";
 
 export default async function MateriDetailPage({
@@ -52,8 +53,8 @@ export default async function MateriDetailPage({
       <p className="text-on-surface-variant mb-8">{m.description}</p>
       {m.content_html ? (
         <div
-          className="prose-kanum bg-white border border-outline-variant rounded-2xl p-6"
-          dangerouslySetInnerHTML={{ __html: m.content_html }}
+          className="prose-kanum bg-white border border-outline-variant rounded-2xl p-4 sm:p-6"
+          dangerouslySetInnerHTML={{ __html: decorateCaptions(m.content_html) }}
         />
       ) : (
         <p className="text-on-surface-variant italic">Konten materi belum diisi.</p>

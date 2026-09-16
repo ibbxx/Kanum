@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Icon } from "@/components/Icon";
 import { SmartImage } from "@/components/SmartImage";
+import { decorateCaptions } from "@/lib/sanitize-html";
 import type { Budaya } from "@/lib/types";
 
 export default async function BudayaDetailPage({
@@ -46,8 +47,8 @@ export default async function BudayaDetailPage({
       <p className="text-on-surface-variant mb-8 whitespace-pre-line">{b.description}</p>
       {b.content_html ? (
         <div
-          className="prose-kanum bg-white border border-outline-variant rounded-2xl p-6"
-          dangerouslySetInnerHTML={{ __html: b.content_html }}
+          className="prose-kanum bg-white border border-outline-variant rounded-2xl p-4 sm:p-6"
+          dangerouslySetInnerHTML={{ __html: decorateCaptions(b.content_html) }}
         />
       ) : null}
     </div>

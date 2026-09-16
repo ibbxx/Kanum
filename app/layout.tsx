@@ -46,16 +46,11 @@ export default function RootLayout({
             strategy="beforeInteractive"
           />
         )}
-        {/* Material Symbols tetap via CDN (hanya glyph icon font, kecil
-            dan di-cache panjang); teks sudah self-hosted di bawah.
-            Preconnect memangkas DNS+TCP+TLS (~250–500 ms di jaringan lambat)
-            dari pemuatan CSS + woff2 ikon yang render-blocking. */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block"
-          rel="stylesheet"
-        />
+        {/* Font ikon Material Symbols kini self-hosted lewat @font-face di
+            globals.css (/fonts/material-symbols-outlined.woff2) — sama seperti
+            font teks. Tidak ada lagi stylesheet pihak ketiga yang
+            render-blocking, dan tidak ada lagi ketergantungan pada CDN untuk
+            seluruh ikon aplikasi. */}
       </head>
       <body className="bg-background text-on-background font-body-md min-h-screen antialiased">
         <ToastProvider>
